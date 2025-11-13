@@ -1,0 +1,41 @@
+{
+    "common": {
+        "attribution": "Data provided by ProNatura"
+    },
+    "config": {
+        "abort": {
+            "already_configured": "This address is already configured.",
+            "street_not_found": "The selected street can no longer be configured."
+        },
+        "error": {
+            "address_not_found": "The selected address is no longer available. Please choose again.",
+            "cannot_connect": "Could not connect to the ProNatura service.",
+            "no_addresses": "No address points are available for this street.",
+            "no_streets": "No streets are available right now.",
+            "street_not_found": "The selected street is no longer available. Please choose again."
+        },
+        "step": {
+            "address": {
+                "data": {
+                    "address_id": "Building number"
+                },
+                "description": "Pick the building number for {street}.",
+                "title": "Select your address"
+            },
+            "user": {
+                "data": {
+                    "street_id": "Street"
+                },
+                "description": "Choose the street for which you want to monitor the trash pickup schedule.",
+                "title": "Select your street"
+            }
+        }
+    },
+    "title": "ProNatura",
+    "issues": {
+        "address_not_found": {
+            "title": "Update your ProNatura address",
+            "description": "Home Assistant can no longer find the configured address {address}. Most probably its name changed in ProNatura database. To fix this issue, reconfigure the integration and pick the address once again."
+        }
+    }
+}

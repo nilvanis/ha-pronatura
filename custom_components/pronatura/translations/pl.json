@@ -1,0 +1,41 @@
+{
+    "common": {
+        "attribution": "Dane udostępnione przez ProNatura"
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Ten adres jest już skonfigurowany.",
+            "street_not_found": "Wybranej ulicy nie można już skonfigurować."
+        },
+        "error": {
+            "address_not_found": "Wybrany adres nie jest już dostępny. Wybierz ponownie.",
+            "cannot_connect": "Nie można połączyć się z usługą ProNatura.",
+            "no_addresses": "Brak punktów adresowych dla tej ulicy.",
+            "no_streets": "W tej chwili brak dostępnych ulic.",
+            "street_not_found": "Wybrana ulica nie jest już dostępna. Wybierz ponownie."
+        },
+        "step": {
+            "address": {
+                "data": {
+                    "address_id": "Numer budynku"
+                },
+                "description": "Wybierz numer budynku dla {street}.",
+                "title": "Wybierz adres"
+            },
+            "user": {
+                "data": {
+                    "street_id": "Ulica"
+                },
+                "description": "Wybierz ulicę, dla której chcesz monitorować harmonogram odbioru odpadów.",
+                "title": "Wybierz ulicę"
+            }
+        }
+    },
+    "title": "ProNatura",
+    "issues": {
+        "address_not_found": {
+            "title": "Zaktualizuj adres w integracji ProNatura",
+            "description": "Home Assistant nie może już znaleźć skonfigurowanego adresu {address}. Prawdopodobnie zmieniła się jego nazwa w bazie danych ProNatura. Aby rozwiązać problem ponownie skonfiguruj integrację i wybierz adres."
+        }
+    }
+}
