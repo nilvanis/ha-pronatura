@@ -1,7 +1,5 @@
 {
   "name": "ProNatura Garbage Collection Schedules",
   "country": ["PL"],
-  "render_readme": true,
-  "domains": ["pronatura"],
   "content_in_root": false
 }
