@@ -1,7 +1,11 @@
 # ProNatura for Home Assistant
 
+![ProNatura](logo.png)
+
 Custom integration that downloads the ProNatura garbage collection schedule
-and exposes one date sensor per supported fraction.
+and exposes one date sensor per supported fraction.\
+\
+🔗 [Garbage Collection Schedule Website](https://www.pronatura.bydgoszcz.pl/home/uslugi-odbioru-odpadow)
 
 ## Features
 
