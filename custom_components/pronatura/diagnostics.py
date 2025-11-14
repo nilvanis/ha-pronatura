@@ -8,10 +8,43 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_ADDRESS_ID
+from .const import (
+    CONF_ADDRESS_ID,
+    CONF_ADDRESS_NAME,
+    CONF_BUILDING_NUMBER,
+    CONF_BUILDING_TYPE,
+    CONF_STREET_NAME,
+)
 from .models import ProNaturaConfigEntry
 
-TO_REDACT = {CONF_ADDRESS_ID}
+ENTRY_REDACT_KEYS = {
+    CONF_ADDRESS_ID,
+    CONF_STREET_NAME,
+    CONF_BUILDING_NUMBER,
+    CONF_ADDRESS_NAME,
+    CONF_BUILDING_TYPE,
+}
+
+DETAILS_REDACT_KEYS = {
+    "full_address",
+    "street",
+    "building_number",
+    "address_name",
+    "area",
+    "building_type",
+    "city",
+}
+
+SCHEDULE_REDACT_KEYS = {
+    "id",
+    "street",
+    "buildingNumber",
+    "name",
+    "area",
+    "city",
+    "buildingType",
+    CONF_ADDRESS_ID,
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -23,11 +56,21 @@ async def async_get_config_entry_diagnostics(
     coordinator = runtime.coordinator
     data = coordinator.data
 
+    entry_data = async_redact_data(entry.data, ENTRY_REDACT_KEYS)
+    details_payload = (
+        async_redact_data(_serialize_details(data.details), DETAILS_REDACT_KEYS)
+        if data
+        else None
+    )
+    raw_schedule = (
+        async_redact_data(data.raw_schedule, SCHEDULE_REDACT_KEYS) if data else None
+    )
+
     return {
-        "entry_data": async_redact_data(entry.data, TO_REDACT),
-        "address_details": _serialize_details(data.details) if data else None,
+        "entry_data": entry_data,
+        "address_details": details_payload,
         "next_dates": _serialize_dates(data.next_dates) if data else {},
-        "raw_schedule": data.raw_schedule if data else None,
+        "raw_schedule": raw_schedule,
     }
 
 
