@@ -1,4 +1,25 @@
-"""API client for the ProNatura integration."""
+"""Client for the ProNatura REST API.
+
+    - `GET /streets` returns all available streets, where garbage collection is offered
+    - `GET /address-points/{street_id}` resolves the address points on a street
+    - `GET /trash-schedule/{address_id}` yields the monthly trash schedule for an exact address
+
+Street and address identifiers are intentionally treated as dynamic: I found, that
+the IDs change over time preventing already created sensors to update.
+As a result, every schedule lookup re-fetches the street list, then the address points for the
+matching street, and only then calls the trash-schedule endpoint with the
+current address identifier. This flow ensures we always find the correct
+collection plan even if the upstream IDs change between requests.
+
+Therefore HA sensors looks by street name, building number, and optionally
+address name to identify the correct address - not the address_id.
+
+Building number is not always a number - sometimes it's a name, like PARKING.
+
+Each request shares a Home Assistant managed `ClientSession`, respects
+`API_TIMEOUT`, and raises `ProNaturaApiError` subclasses for consistent
+error handling across the integration layers.
+"""
 
 from __future__ import annotations
 
@@ -83,21 +104,30 @@ class ProNaturaApiClient:
     async def async_get_streets(self) -> list[ProNaturaStreet]:
         """Return all streets."""
         _LOGGER.debug("Requesting ProNatura streets list")
-        response: list[ProNaturaStreet] = await self._request("streets")
+        response: list[ProNaturaStreet] = await self._request(
+            "streets", context="streets list"
+        )
         _LOGGER.debug("Received %d ProNatura streets", len(response))
         return response
 
     async def async_get_address_points(
-        self, street_id: str
+        self, street_id: str, *, street_name: str | None = None
     ) -> list[ProNaturaAddressPoint]:
         """Return address points for a street."""
-        _LOGGER.debug("Requesting ProNatura address points for street %s", street_id)
+        target = street_name or street_id
+        _LOGGER.debug(
+            "Requesting ProNatura address points for street %s (id: %s)",
+            target,
+            street_id,
+        )
         response: list[ProNaturaAddressPoint] = await self._request(
-            f"address-points/{street_id}"
+            f"address-points/{street_id}",
+            context=f"address points for {target}",
         )
         _LOGGER.debug(
-            "Received %d ProNatura address points for street %s",
+            "Received %d ProNatura address points for street %s (id: %s)",
             len(response),
+            target,
             street_id,
         )
         return response
@@ -107,11 +137,16 @@ class ProNaturaApiClient:
     ) -> ProNaturaTrashScheduleResponse:
         """Return trash schedule for an address."""
         target = label or address_id
-        _LOGGER.debug("Requesting ProNatura trash schedule for %s", target)
-        response: ProNaturaTrashScheduleResponse = await self._request(
-            f"trash-schedule/{address_id}"
+        _LOGGER.debug(
+            "Requesting ProNatura trash schedule for %s (id: %s )", target, address_id
         )
-        _LOGGER.debug("Received ProNatura trash schedule for %s", target)
+        response: ProNaturaTrashScheduleResponse = await self._request(
+            f"trash-schedule/{address_id}",
+            context=f"trash schedule for {target}",
+        )
+        _LOGGER.debug(
+            "Received ProNatura trash schedule for %s (id: %s )", target, address_id
+        )
         return response
 
     async def async_get_trash_schedule_for_address(
@@ -141,7 +176,9 @@ class ProNaturaApiClient:
         if street_id is None:
             raise ProNaturaStreetNotFoundError("Street not found")
 
-        addresses = await self.async_get_address_points(street_id)
+        addresses = await self.async_get_address_points(
+            street_id, street_name=street_name
+        )
         normalized_number = _normalize_building_number(building_number)
         normalized_name = _normalize_text(address_name)
 
@@ -160,29 +197,34 @@ class ProNaturaApiClient:
 
         raise ProNaturaAddressNotFoundError("Address not found")
 
-    async def _request(self, path: str) -> Any:
+    async def _request(self, path: str, *, context: str | None = None) -> Any:
         """Perform an HTTP GET request."""
         url = f"{BASE_API_URL}/{path}"
-        _LOGGER.debug("Sending GET request to %s", url)
+        readable_target = context or url
+        _LOGGER.debug("Sending GET request to %s", readable_target)
         try:
             async with timeout(API_TIMEOUT):
                 async with self._session.get(url) as response:
                     _LOGGER.debug(
-                        "ProNatura response status %s for %s", response.status, url
+                        "ProNatura response status %s for %s",
+                        response.status,
+                        readable_target,
                     )
-                    await _raise_for_status(response)
+                    await _raise_for_status(response, context=readable_target)
                     data = await response.json()
-                    _LOGGER.debug("Decoded JSON payload from %s", url)
+                    _LOGGER.debug("Decoded JSON payload from %s", readable_target)
                     return data
         except TimeoutError as err:
-            _LOGGER.debug("Timeout while fetching %s", url)
+            _LOGGER.warning("Timed out while fetching %s", readable_target)
             raise ProNaturaApiError("Timed out while connecting to ProNatura") from err
         except ClientError as err:
-            _LOGGER.debug("Client error while fetching %s: %s", url, err)
+            _LOGGER.warning("Client error while fetching %s: %s", readable_target, err)
             raise ProNaturaApiError("Error communicating with ProNatura") from err
 
 
-async def _raise_for_status(response: ClientResponse) -> None:
+async def _raise_for_status(
+    response: ClientResponse, *, context: str | None = None
+) -> None:
     """Raise for non-2xx responses with a helpful message."""
     if response.status < 400:
         return
@@ -191,8 +233,10 @@ async def _raise_for_status(response: ClientResponse) -> None:
         text = await response.text()
     except ClientError:
         text = None
+    target = context or response.url.human_repr()
     _LOGGER.debug(
-        "ProNatura request failed with status %s and body %s",
+        "ProNatura request failed for %s with status %s and body %s",
+        target,
         response.status,
         text,
     )

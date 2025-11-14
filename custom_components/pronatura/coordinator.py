@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, tzinfo
 import logging
+from typing import Any, Mapping
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -105,7 +106,7 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
                 label=self._address_label,
             )
         except (ProNaturaAddressNotFoundError, ProNaturaStreetNotFoundError) as err:
-            self._report_address_issue()
+            self._report_address_issue(err)
             raise UpdateFailed(err) from err
         except ProNaturaApiError as err:
             raise UpdateFailed(err) from err
@@ -119,12 +120,13 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
             details=details,
         )
 
-    def _report_address_issue(self) -> None:
-        """Log and create a repair issue for missing addresses."""
+    def _report_address_issue(self, error: Exception) -> None:
+        """Log the failure details and create a repair issue for missing addresses."""
         if not self._issue_active:
             LOGGER.warning(
-                "Address %s is no longer available in ProNatura; please reconfigure the integration entry",
+                "Address %s is no longer available in ProNatura (%s); please reconfigure the integration entry",
                 self._address_label,
+                error,
             )
             self._issue_active = True
 
@@ -145,15 +147,18 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
         )
 
     def _clear_address_issue(self) -> None:
-        """Remove address issue once the schedule can be resolved again."""
+        """Log recovery and remove the repair issue once the schedule resolves again."""
         if not self._issue_active:
             return
+        LOGGER.info(
+            "Address %s is available again; clearing repair issue", self._address_label
+        )
         ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
         self._issue_active = False
 
 
 def _build_address_details(
-    schedule: ProNaturaTrashScheduleResponse, entry_data: dict
+    schedule: ProNaturaTrashScheduleResponse, entry_data: Mapping[str, Any]
 ) -> ProNaturaAddressDetails:
     street = schedule.get("street") or entry_data.get(CONF_STREET_NAME, "")
     building_number = schedule.get("buildingNumber") or entry_data.get(
@@ -184,9 +189,15 @@ def _compute_next_collection_dates(
     schedule_year = schedule.get("year", today.year)
 
     fractions: dict[str, _FractionCollectionWindow] = {}
+    unknown_month_labels: set[str] = set()
+    invalid_day_entries: list[str] = []
     for month_info in schedule.get("trashSchedule", []):
         month_label = (month_info.get("month") or "").casefold()
         if (month_number := MONTH_NAME_TO_NUMBER.get(month_label)) is None:
+            if month_label:
+                unknown_month_labels.add(month_label)
+            else:
+                unknown_month_labels.add("<missing>")
             continue
 
         for fraction in month_info.get("schedule", []):
@@ -203,6 +214,9 @@ def _compute_next_collection_dates(
                     day_int = int(day_str)
                     candidate = date(schedule_year, month_number, day_int)
                 except (ValueError, TypeError):
+                    invalid_day_entries.append(
+                        f"{fraction_name}/{month_label or '?'}={day_str}"
+                    )
                     continue
 
                 if candidate < today:
@@ -214,6 +228,17 @@ def _compute_next_collection_dates(
                 next_best = tracker.next_date
                 if next_best is None or candidate < next_best:
                     tracker.next_date = candidate
+
+    if unknown_month_labels:
+        LOGGER.debug(
+            "Ignoring ProNatura schedule months with unknown labels: %s",
+            ", ".join(sorted(unknown_month_labels)),
+        )
+    if invalid_day_entries:
+        LOGGER.debug(
+            "Ignoring ProNatura schedule entries with invalid days: %s",
+            ", ".join(invalid_day_entries),
+        )
 
     return {
         fraction_name: tracker.next_date or tracker.previous_date

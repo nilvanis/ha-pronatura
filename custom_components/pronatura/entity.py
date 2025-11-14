@@ -66,11 +66,14 @@ class ProNaturaEntity(CoordinatorEntity[ProNaturaDataUpdateCoordinator]):
             details.building_number if details else self._building_number,
             (details.address_name if details else None) or self._address_name,
         )
-        model = (
-            f"{name}, "
-            f"{details.building_type if details else self._building_type}, "
-            f"strefa: {details.area if details else None}"
-        )
+        model_parts = [name]
+        building_type = details.building_type if details else self._building_type
+        if building_type:
+            model_parts.append(str(building_type))
+        area = details.area if details else None
+        if area:
+            model_parts.append(f"strefa: {area}")
+        model = ", ".join(model_parts)
 
         return DeviceInfo(
             identifiers={(DOMAIN, self._address_id)},

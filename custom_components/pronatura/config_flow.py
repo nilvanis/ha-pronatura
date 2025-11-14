@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -31,6 +32,8 @@ from .const import (
     DOMAIN,
 )
 from .util import format_address_label
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ProNaturaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -81,7 +84,8 @@ class ProNaturaConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._streets:
             try:
                 self._streets = await self.client.async_get_streets()
-            except ProNaturaApiError:
+            except ProNaturaApiError as err:
+                LOGGER.debug("Failed to fetch ProNatura streets: %s", err)
                 errors["base"] = "cannot_connect"
 
         if not self._streets and "base" not in errors:
@@ -170,9 +174,15 @@ class ProNaturaConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._addresses:
             try:
                 self._addresses = await self.client.async_get_address_points(
-                    self._street["id"]
+                    self._street["id"],
+                    street_name=self._street["street"],
                 )
-            except ProNaturaApiError:
+            except ProNaturaApiError as err:
+                LOGGER.debug(
+                    "Failed to fetch ProNatura address points for street %s: %s",
+                    self._street["street"],
+                    err,
+                )
                 errors["base"] = "cannot_connect"
 
         if not self._addresses and "base" not in errors:
