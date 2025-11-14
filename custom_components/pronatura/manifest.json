@@ -1,12 +1,12 @@
 {
   "domain": "pronatura",
   "name": "ProNatura",
-  "version": "1.0.1",
   "codeowners": ["@nilvanis"],
   "config_flow": true,
   "documentation": "https://github.com/nilvanis/ha-pronatura",
   "issue_tracker": "https://github.com/nilvanis/ha-pronatura/issues",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": []
+  "requirements": [],
+  "version": "1.0.1"
 }
