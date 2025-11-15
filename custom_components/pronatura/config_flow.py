@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -31,6 +31,7 @@ from .const import (
     CONF_STREET_NAME,
     DOMAIN,
 )
+from .models import ProNaturaRuntimeData
 from .util import format_address_label
 
 LOGGER = logging.getLogger(__name__)
@@ -63,6 +64,7 @@ class ProNaturaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a reconfiguration initiated from Repairs."""
         self._reconfigure_entry = self._get_reconfigure_entry()
+        await self._async_force_entry_refresh(self._reconfigure_entry)
         return await self.async_step_user(user_input)
 
     async def async_step_user(
@@ -216,3 +218,12 @@ class ProNaturaConfigFlow(ConfigFlow, domain=DOMAIN):
                 "street": self._street["street"].title(),
             },
         )
+
+    async def _async_force_entry_refresh(self, entry: ConfigEntry | None) -> None:
+        """Force the coordinator to refresh when reconfiguring."""
+        if entry is None:
+            return
+        runtime_data = cast(ProNaturaRuntimeData | None, entry.runtime_data)
+        if runtime_data is None:
+            return
+        await runtime_data.coordinator.async_force_schedule_refresh()

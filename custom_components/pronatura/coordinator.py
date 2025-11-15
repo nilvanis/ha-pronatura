@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping as CollectionsMapping
 from dataclasses import dataclass
-from datetime import date, tzinfo
+from datetime import date, datetime, tzinfo
 import logging
-from typing import Any, Mapping
+from typing import Any
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -95,16 +97,22 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
         )
         self._issue_active = False
         self._issue_id = f"{entry.entry_id}_address_not_found"
+        self._schedule_cache: ProNaturaTrashScheduleResponse | None = None
+        self._schedule_cache_timestamp: datetime | None = None
+        self._new_day_listener: CALLBACK_TYPE = async_track_time_change(
+            self.hass,
+            self._async_handle_new_day,
+            hour=0,
+            minute=0,
+            second=0,
+        )
+        self._entry.async_on_unload(self._new_day_listener)
 
     async def _async_update_data(self) -> ProNaturaCollectionData:
         """Fetch the latest schedule and compute next collection dates."""
+        now = dt_util.utcnow()
         try:
-            schedule = await self._client.async_get_trash_schedule_for_address(
-                street_name=self._street_name,
-                building_number=self._building_number,
-                address_name=self._address_name,
-                label=self._address_label,
-            )
+            schedule = await self._async_get_or_fetch_schedule(now)
         except (ProNaturaAddressNotFoundError, ProNaturaStreetNotFoundError) as err:
             self._report_address_issue(err)
             raise UpdateFailed(err) from err
@@ -156,9 +164,47 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
         ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
         self._issue_active = False
 
+    async def _async_handle_new_day(self, _: datetime) -> None:
+        """Recalculate collection dates immediately when the day changes."""
+        if self.hass.is_stopping:
+            return
+        await self.async_request_refresh()
+
+    async def async_force_schedule_refresh(self) -> None:
+        """Force an immediate API refresh, bypassing the daily cache."""
+        self._schedule_cache = None
+        self._schedule_cache_timestamp = None
+        await self.async_refresh()
+
+    async def _async_get_or_fetch_schedule(
+        self, now: datetime
+    ) -> ProNaturaTrashScheduleResponse:
+        """Return a cached schedule, refreshing it at most once per day."""
+        should_refresh = (
+            self._schedule_cache is None
+            or self._schedule_cache_timestamp is None
+            or (now - self._schedule_cache_timestamp) >= UPDATE_INTERVAL
+        )
+
+        if should_refresh:
+            schedule = await self._client.async_get_trash_schedule_for_address(
+                street_name=self._street_name,
+                building_number=self._building_number,
+                address_name=self._address_name,
+                label=self._address_label,
+            )
+            self._schedule_cache = schedule
+            self._schedule_cache_timestamp = dt_util.utcnow()
+            return schedule
+
+        cached_schedule = self._schedule_cache
+        if cached_schedule is None:
+            raise ProNaturaApiError("Cached schedule missing after refresh attempt")
+        return cached_schedule
+
 
 def _build_address_details(
-    schedule: ProNaturaTrashScheduleResponse, entry_data: Mapping[str, Any]
+    schedule: ProNaturaTrashScheduleResponse, entry_data: CollectionsMapping[str, Any]
 ) -> ProNaturaAddressDetails:
     street = schedule.get("street") or entry_data.get(CONF_STREET_NAME, "")
     building_number = schedule.get("buildingNumber") or entry_data.get(
