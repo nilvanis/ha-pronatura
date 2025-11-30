@@ -21,10 +21,11 @@ Integracja do Home Assistant pobierająca harmonogram wywozu śmieci dla wybrane
 
 ### Przez HACS (zalecana)
 
-1. W panelu HACS,w prawym górnym rogu kliknij **⋮**, a następnie wybierz **Niestandardowe repozytoria**.\
-   Dodaj tam `https://github.com/nilvanis/ha-pronatura`, wybierz kategorię **Integracja**.
-2. W HACS poszukaj ProNatura i zainstaluj integrację.
-3. Zrestartuj Home Assistant.
+Kliknij przycisk poniżej, aby otworzyć stronę integracji w HACS.
+
+[![Otwórz stronę integracji ProNatura w HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nilvanis&repository=ha-pronatura&category=integration)
+
+Możesz też ręcznie wyszukać integrację w HACS wpisując w wyszukiwarkę `ProNatura` lub `ProNatura Garbage Collection Schedules`.
 
 ### Ręcznie
 
@@ -76,9 +77,11 @@ Home Assistant integration that downloads the garbage collection schedule for a 
 
 ### HACS (recommended)
 
-1. In HACS click **Integrations → ⋮ → Custom repositories** and add `https://github.com/nilvanis/ha-pronatura`, selecting the **Integration** category.
-2. Search for **ProNatura** in HACS and install the integration.
-3. Restart Home Assistant.
+Click the following button to open the integration directly on the HACS integration page.
+
+[![Open ProNatura integration page in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nilvanis&repository=ha-pronatura&category=integration)
+
+You can also find the integration manually in HACS by searching for `ProNatura` or `ProNatura Garbage Collection Schedules`.
 
 ### Manual copy
 
