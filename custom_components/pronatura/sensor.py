@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import FRACTION_ICONS
@@ -24,18 +24,34 @@ async def async_setup_entry(
     assert runtime_data is not None
     coordinator = runtime_data.coordinator
 
-    if coordinator.data is None:
-        return
+    known_fractions: set[str] = set()
 
-    entities = [
-        ProNaturaCollectionSensor(
-            coordinator=coordinator,
-            entry=entry,
-            fraction=fraction,
-        )
-        for fraction in sorted(coordinator.data.next_dates)
-    ]
-    async_add_entities(entities)
+    async def _async_add_new_entities() -> None:
+        if coordinator.data is None:
+            return
+
+        new_fractions = set(coordinator.data.next_dates) - known_fractions
+        if not new_fractions:
+            return
+
+        entities = [
+            ProNaturaCollectionSensor(
+                coordinator=coordinator,
+                entry=entry,
+                fraction=fraction,
+            )
+            for fraction in sorted(new_fractions)
+        ]
+        known_fractions.update(new_fractions)
+        async_add_entities(entities)
+
+    await _async_add_new_entities()
+
+    @callback
+    def _handle_coordinator_update() -> None:
+        hass.async_create_task(_async_add_new_entities())
+
+    entry.async_on_unload(coordinator.async_add_listener(_handle_coordinator_update))
 
 
 class ProNaturaCollectionSensor(ProNaturaEntity, SensorEntity):
