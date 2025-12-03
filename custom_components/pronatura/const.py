@@ -27,17 +27,23 @@ ATTRIBUTION_TRANSLATION_KEY: Final = f"component.{DOMAIN}.common.attribution"
 
 MONTH_NAME_TO_NUMBER: Final = {
     "styczeń": 1,
+    "styczen": 1,
     "luty": 2,
     "marzec": 3,
     "kwiecień": 4,
+    "kwiecien": 4,
     "maj": 5,
     "czerwiec": 6,
     "lipiec": 7,
     "sierpień": 8,
+    "sierpien": 8,
     "wrzesień": 9,
+    "wrzesien": 9,
     "październik": 10,
+    "pazdziernik": 10,
     "listopad": 11,
     "grudzień": 12,
+    "grudzien": 12,
 }
 
 FRACTION_ICONS: Final = {
