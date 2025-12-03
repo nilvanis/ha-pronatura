@@ -37,5 +37,15 @@
             "title": "Zaktualizuj adres w integracji ProNatura",
             "description": "Home Assistant nie może już znaleźć skonfigurowanego adresu {address}. Prawdopodobnie zmieniła się jego nazwa w bazie danych ProNatura. Aby rozwiązać problem ponownie skonfiguruj integrację i wybierz adres."
         }
+    },
+    "repairs": {
+        "address_not_found": {
+            "step": {
+                "confirm": {
+                    "title": "Skonfiguruj ponownie adres ProNatura",
+                    "description": "Home Assistant rozpocznie ponowną konfigurację ProNatura dla {title}, abyś mógł ponownie wybrać adres."
+                }
+            }
+        }
     }
 }
