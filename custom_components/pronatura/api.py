@@ -24,10 +24,11 @@ error handling across the integration layers.
 from __future__ import annotations
 
 from asyncio import timeout
+from json import JSONDecodeError
 import logging
 from typing import Any, TypedDict
 
-from aiohttp import ClientError, ClientResponse, ClientSession
+from aiohttp import ClientError, ClientResponse, ClientSession, ContentTypeError
 
 from .const import API_TIMEOUT, BASE_API_URL
 
@@ -211,7 +212,17 @@ class ProNaturaApiClient:
                         readable_target,
                     )
                     await _raise_for_status(response, context=readable_target)
-                    data = await response.json()
+                    try:
+                        data = await response.json()
+                    except (ContentTypeError, JSONDecodeError) as err:
+                        _LOGGER.warning(
+                            "Invalid JSON payload from ProNatura for %s: %s",
+                            readable_target,
+                            err,
+                        )
+                        raise ProNaturaApiError(
+                            "Invalid response received from ProNatura"
+                        ) from err
                     _LOGGER.debug("Decoded JSON payload from %s", readable_target)
                     return data
         except TimeoutError as err:
