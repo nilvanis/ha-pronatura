@@ -59,6 +59,8 @@ Atrybuty:
 Dane z API odświeżane są raz na dobę, aby niepotrzebnie nie obciążać serwisu.\
 Wyątek stanowi: restart Home Assistant, rekonfiguracja integracji oraz komunikat Napraw.
 
+W przypadku, gdy adres nie jest już dostępny w ProNatura API, wyświetlony zostaje komunikat Napraw proszący o wybranie nowego adresu.
+
 ## English version
 
 Home Assistant integration that downloads the garbage collection schedule for a selected address serviced by ProNatura (Bydgoszcz).\
@@ -71,7 +73,6 @@ Home Assistant integration that downloads the garbage collection schedule for a 
 - Possibility to configure multiple addresses (schedules).
 - Configuration handled via Config Flow (Home Assistant UI).
 - Street and address are chosen from a list downloaded from ProNatura.
-- Sensors are added dynamically if ProNatura introduces new waste fractions, no reload needed.
 - Repairs support, cached data responses, and diagnostics download.
 
 ## Installation
