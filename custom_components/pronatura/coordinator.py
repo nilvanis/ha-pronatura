@@ -237,7 +237,22 @@ def _compute_next_collection_dates(
     fractions: dict[str, _FractionCollectionWindow] = {}
     unknown_month_labels: set[str] = set()
     invalid_day_entries: list[str] = []
-    for month_info in schedule.get("trashSchedule", []):
+    invalid_month_entries: list[str] = []
+    invalid_fraction_entries: list[str] = []
+
+    trash_schedule = schedule.get("trashSchedule", [])
+    if not isinstance(trash_schedule, list):
+        LOGGER.debug(
+            "Ignoring ProNatura trashSchedule with unexpected type: %s",
+            type(trash_schedule).__name__,
+        )
+        return {}
+
+    for month_info in trash_schedule:
+        if not isinstance(month_info, CollectionsMapping):
+            invalid_month_entries.append(str(month_info))
+            continue
+
         month_label = (month_info.get("month") or "").casefold()
         if (month_number := MONTH_NAME_TO_NUMBER.get(month_label)) is None:
             if month_label:
@@ -247,6 +262,12 @@ def _compute_next_collection_dates(
             continue
 
         for fraction in month_info.get("schedule", []):
+            if not isinstance(fraction, CollectionsMapping):
+                invalid_fraction_entries.append(
+                    f"{month_label or '?'}={fraction!s}"
+                )
+                continue
+
             fraction_name = fraction.get("type")
             if not fraction_name:
                 continue
@@ -284,6 +305,16 @@ def _compute_next_collection_dates(
         LOGGER.debug(
             "Ignoring ProNatura schedule entries with invalid days: %s",
             ", ".join(invalid_day_entries),
+        )
+    if invalid_month_entries:
+        LOGGER.debug(
+            "Ignoring ProNatura schedule entries with invalid month data: %s",
+            ", ".join(invalid_month_entries),
+        )
+    if invalid_fraction_entries:
+        LOGGER.debug(
+            "Ignoring ProNatura schedule entries with invalid fraction data: %s",
+            ", ".join(invalid_fraction_entries),
         )
 
     return {
