@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -45,7 +45,6 @@ class _AddressRepairFlow(RepairsFlow):
                     "source": SOURCE_RECONFIGURE,
                     "entry_id": entry.entry_id,
                 },
-                data=cast(dict[str, Any], entry.data),
             )
             return self.async_create_entry(data={})
 
