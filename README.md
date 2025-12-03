@@ -71,6 +71,7 @@ Home Assistant integration that downloads the garbage collection schedule for a 
 - Possibility to configure multiple addresses (schedules).
 - Configuration handled via Config Flow (Home Assistant UI).
 - Street and address are chosen from a list downloaded from ProNatura.
+- Sensors are added dynamically if ProNatura introduces new waste fractions, no reload needed.
 - Repairs support, cached data responses, and diagnostics download.
 
 ## Installation
@@ -109,3 +110,5 @@ Attributes:
 
 Data from the API is refreshed once per day so the service is not overloaded.
 Exceptions: Home Assistant restart, integration reconfiguration, and Repairs notifications.
+
+If a previously configured address disappears from ProNatura, Home Assistant shows a Repair notification that lets you reopen the ProNatura config flow and pick the address again.
