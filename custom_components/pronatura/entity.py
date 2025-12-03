@@ -45,7 +45,7 @@ class ProNaturaEntity(CoordinatorEntity[ProNaturaDataUpdateCoordinator]):
     async def async_added_to_hass(self) -> None:
         """Update translated fields after the entity is added."""
         await super().async_added_to_hass()
-        translations = translation_helper.async_get_cached_translations(
+        translations = await translation_helper.async_get_cached_translations(
             self.hass,
             self.hass.config.language,
             "component",
