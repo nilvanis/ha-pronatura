@@ -55,6 +55,8 @@ Atrybuty:
 - `area` - obszar wywozu śmieci wg ProNatura
 - `building_type` - typ budynku (np. `MIESZKALNA`, `NIEMIESZKALNA`)
 - `address_name` - opcjonalne, dostepne gdy ProNatura dostarcza własną, dodatkową nazwę dla nieruchomości
+- `days_until_collection` - ilość dni do najbliższej daty wywozu frakcji
+- `last_collection` - data ostatniego odbioru frakcji wg harmonogramu
 
 Dane z API odświeżane są raz na dobę, aby niepotrzebnie nie obciążać serwisu.\
 Wyątek stanowi: restart Home Assistant, rekonfiguracja integracji oraz komunikat Napraw.
@@ -108,6 +110,8 @@ Attributes:
 - `area` – collection zone defined by ProNatura.
 - `building_type` – building type (for example `MIESZKALNA`, `NIEMIESZKALNA`).
 - `address_name` – optional additional name for the property provided by ProNatura.
+- `days_until_collection` - number of days until next collection
+- `last_collection` - date of the last collection according to schedule
 
 Data from the API is refreshed once per day so the service is not overloaded.
 Exceptions: Home Assistant restart, integration reconfiguration, and Repairs notifications.
