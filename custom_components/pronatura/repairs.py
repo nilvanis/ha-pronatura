@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.config_entries import SOURCE_RECONFIGURE
+from homeassistant.config_entries import ConfigEntry, SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant
 
 
@@ -21,7 +21,8 @@ class _AddressRepairFlow(RepairsFlow):
         super().__init__()
 
     @property
-    def _entry(self):
+    def _entry(self) -> ConfigEntry | None:
+        """Return the config entry being repaired."""
         return self.hass.config_entries.async_get_entry(self._entry_id)
 
     async def async_step_init(
@@ -33,7 +34,13 @@ class _AddressRepairFlow(RepairsFlow):
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
-        """Start the reconfigure config flow."""
+        """Start the reconfigure config flow.
+
+        Note: The repair issue will be automatically cleared by the coordinator
+        once the reconfiguration succeeds and data is successfully fetched.
+        We don't mark it as fixed here to avoid false positives if the user
+        cancels the reconfigure flow.
+        """
         entry = self._entry
         if entry is None:
             return self.async_abort(reason="entry_not_found")
@@ -46,7 +53,7 @@ class _AddressRepairFlow(RepairsFlow):
                     "entry_id": entry.entry_id,
                 },
             )
-            return self.async_create_entry(data={})
+            return self.async_abort(reason="reconfigure_initiated")
 
         return self.async_show_form(
             step_id="confirm",
