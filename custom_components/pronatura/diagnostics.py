@@ -7,6 +7,7 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_ADDRESS_ID,
@@ -70,7 +71,24 @@ async def async_get_config_entry_diagnostics(
         "entry_data": entry_data,
         "address_details": details_payload,
         "next_dates": _serialize_dates(data.next_dates) if data else {},
+        "previous_dates": _serialize_dates(data.previous_dates) if data else {},
         "raw_schedule": raw_schedule,
+        "coordinator_status": {
+            "last_update_success": coordinator.last_update_success,
+            "last_update_time": coordinator.last_update_success_time.isoformat()
+                if coordinator.last_update_success_time else None,
+            "update_interval_seconds": coordinator.update_interval.total_seconds()
+                if coordinator.update_interval else None,
+            "schedule_cache_age_seconds": (
+                (dt_util.utcnow() - coordinator.schedule_cache_timestamp).total_seconds()
+                if coordinator.schedule_cache_timestamp else None
+            ),
+        },
+        "system_info": {
+            "timezone": str(hass.config.time_zone),
+            "current_time": dt_util.now(hass.config.time_zone).isoformat(),
+            "integration_version": "1.0.4",
+        },
     }
 
 
