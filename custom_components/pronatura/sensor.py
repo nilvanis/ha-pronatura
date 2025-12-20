@@ -7,6 +7,7 @@ from datetime import date
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import FRACTION_ICONS
 from .coordinator import ProNaturaAddressDetails, ProNaturaDataUpdateCoordinator
@@ -83,7 +84,7 @@ class ProNaturaCollectionSensor(ProNaturaEntity, SensorEntity):
         return data.next_dates.get(self._fraction)
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | None] | None:
+    def extra_state_attributes(self) -> dict[str, str | int | None] | None:
         """Return additional metadata for the address."""
         if (coordinator_data := self.coordinator.data) is None:
             return None
@@ -91,11 +92,25 @@ class ProNaturaCollectionSensor(ProNaturaEntity, SensorEntity):
         full_address = " ".join(
             part for part in (details.street, details.building_number) if part
         )
-        attrs: dict[str, str | None] = {
+
+        # Calculate days until next collection
+        next_date = self.native_value
+        days_until: int | None = None
+        if next_date:
+            today = dt_util.now(self.coordinator._timezone).date()
+            delta = next_date - today
+            days_until = delta.days
+
+        # Get last collection date
+        previous_date = coordinator_data.previous_dates.get(self._fraction)
+
+        attrs: dict[str, str | int | None] = {
             "full_address": full_address,
             "fraction_name": self._fraction,
             "area": details.area,
             "building_type": details.building_type,
+            "days_until_collection": days_until,
+            "last_collection": previous_date.isoformat() if previous_date else None,
         }
         if details.address_name:
             attrs["address_name"] = details.address_name

@@ -54,6 +54,7 @@ class ProNaturaCollectionData:
     """Coordinator data payload."""
 
     next_dates: dict[str, date | None]
+    previous_dates: dict[str, date | None]
     raw_schedule: ProNaturaTrashScheduleResponse
     details: ProNaturaAddressDetails
 
@@ -119,11 +120,12 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
         except ProNaturaApiError as err:
             raise UpdateFailed(err) from err
 
-        next_dates = _compute_next_collection_dates(schedule, self._timezone)
+        next_dates, previous_dates = _compute_next_collection_dates(schedule, self._timezone)
         details = _build_address_details(schedule, self._entry.data)
         self._clear_address_issue()
         return ProNaturaCollectionData(
             next_dates=next_dates,
+            previous_dates=previous_dates,
             raw_schedule=schedule,
             details=details,
         )
@@ -176,6 +178,11 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
         self._schedule_cache_timestamp = None
         await self.async_refresh()
 
+    @property
+    def schedule_cache_timestamp(self) -> datetime | None:
+        """Return the timestamp when the schedule was last cached (for diagnostics)."""
+        return self._schedule_cache_timestamp
+
     async def _async_get_or_fetch_schedule(
         self, now: datetime
     ) -> ProNaturaTrashScheduleResponse:
@@ -206,6 +213,37 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
 def _build_address_details(
     schedule: ProNaturaTrashScheduleResponse, entry_data: CollectionsMapping[str, Any]
 ) -> ProNaturaAddressDetails:
+    """Build address metadata from API response and config entry.
+
+    Combines data from the ProNatura API schedule response with stored
+    config entry data, preferring API data when available but falling
+    back to cached config values.
+
+    Args:
+        schedule: The trash schedule response from ProNatura API
+        entry_data: The config entry data dictionary containing fallback values
+
+    Returns:
+        ProNaturaAddressDetails object with complete address metadata
+
+    Example:
+        >>> schedule = {
+        ...     "street": "ŚWIĘTOKRZYSKA",
+        ...     "buildingNumber": "15A",
+        ...     "area": "Strefa A",
+        ...     "buildingType": "MIESZKALNA",
+        ...     "city": "Bydgoszcz"
+        ... }
+        >>> entry_data = {
+        ...     "street_name": "Świętokrzyska",
+        ...     "building_number": "15A"
+        ... }
+        >>> details = _build_address_details(schedule, entry_data)
+        >>> details.full_address
+        'Świętokrzyska 15A'
+        >>> details.area
+        'Strefa A'
+    """
     street = schedule.get("street") or entry_data.get(CONF_STREET_NAME, "")
     building_number = schedule.get("buildingNumber") or entry_data.get(
         CONF_BUILDING_NUMBER
@@ -229,8 +267,46 @@ def _build_address_details(
 
 def _compute_next_collection_dates(
     schedule: ProNaturaTrashScheduleResponse, timezone: tzinfo
-) -> dict[str, date | None]:
-    """Return the next collection date for each fraction."""
+) -> tuple[dict[str, date | None], dict[str, date | None]]:
+    """Return the next and previous collection dates for each fraction.
+
+    Parses the monthly schedule data from ProNatura API and computes:
+    - Next upcoming collection date (>= today) for each waste fraction
+    - Most recent past collection date for each waste fraction
+
+    The function handles malformed data gracefully, logging issues but
+    continuing to process valid entries.
+
+    Args:
+        schedule: The trash schedule response from ProNatura API containing
+            monthly collection data organized by fraction type
+        timezone: The timezone to use for "today" calculation (typically
+            the Home Assistant instance timezone)
+
+    Returns:
+        Tuple of (next_dates, previous_dates) where each is a dictionary
+        mapping fraction names to their respective collection dates.
+        For next_dates, falls back to previous_date if no future dates exist.
+
+    Example:
+        >>> from datetime import date
+        >>> from zoneinfo import ZoneInfo
+        >>> schedule = {
+        ...     "year": 2025,
+        ...     "trashSchedule": [
+        ...         {
+        ...             "month": "grudzień",
+        ...             "schedule": [
+        ...                 {"type": "odpady zmieszane", "days": ["15", "29"]}
+        ...             ]
+        ...         }
+        ...     ]
+        ... }
+        >>> tz = ZoneInfo("Europe/Warsaw")
+        >>> next_dates, prev_dates = _compute_next_collection_dates(schedule, tz)
+        >>> next_dates["odpady zmieszane"]
+        date(2025, 12, 29)  # Assuming today is Dec 20, 2025
+    """
     today = dt_util.now(timezone).date()
     schedule_year = schedule.get("year", today.year)
 
@@ -317,7 +393,12 @@ def _compute_next_collection_dates(
             ", ".join(invalid_fraction_entries),
         )
 
-    return {
+    next_dates = {
         fraction_name: tracker.next_date or tracker.previous_date
         for fraction_name, tracker in fractions.items()
     }
+    previous_dates = {
+        fraction_name: tracker.previous_date
+        for fraction_name, tracker in fractions.items()
+    }
+    return next_dates, previous_dates
