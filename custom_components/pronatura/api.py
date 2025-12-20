@@ -23,14 +23,14 @@ error handling across the integration layers.
 
 from __future__ import annotations
 
-from asyncio import timeout
+import asyncio
 from json import JSONDecodeError
 import logging
 from typing import Any, TypedDict
 
 from aiohttp import ClientError, ClientResponse, ClientSession, ContentTypeError
 
-from .const import API_TIMEOUT, BASE_API_URL
+from .const import API_MAX_RETRIES, API_RETRY_DELAY, API_TIMEOUT, BASE_API_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,7 +158,47 @@ class ProNaturaApiClient:
         address_name: str | None = None,
         label: str | None = None,
     ) -> ProNaturaTrashScheduleResponse:
-        """Resolve the current address identifier before fetching the schedule."""
+        """Resolve the current address identifier before fetching the schedule.
+
+        This method implements the "ephemeral ID" pattern: instead of relying
+        on cached IDs (which may change upstream), it re-resolves the address
+        by name on every request:
+
+        1. Fetch all streets from API
+        2. Find street by normalized name match
+        3. Fetch all addresses on that street
+        4. Find address by normalized building number (and optional name)
+        5. Fetch trash schedule for resolved address ID
+
+        This ensures sensors continue working even if ProNatura changes their
+        internal IDs.
+
+        Args:
+            street_name: The street name to search for (case-insensitive)
+            building_number: The building number (may include letters, e.g., "PARKING")
+            address_name: Optional property name sometimes retured by the API
+            (e.g., "BYDGOSKA SPÓŁDZIELNIA MIESZKANIOWA")
+            label: Human-readable label for logging purposes
+
+        Returns:
+            The complete trash schedule for the matched address
+
+        Raises:
+            ProNaturaApiError: If API request fails or data is invalid
+            ProNaturaStreetNotFoundError: If the street cannot be found
+            ProNaturaAddressNotFoundError: If the building cannot be found
+
+        Example:
+            >>> schedule = await client.async_get_trash_schedule_for_address(
+            ...     street_name="Świętokrzyska",
+            ...     building_number="15A",
+            ...     label="Świętokrzyska 15A"
+            ... )
+            >>> schedule["year"]
+            2025
+            >>> len(schedule["trashSchedule"])
+            12  # 12 months of data
+        """
         if not (
             _normalize_text(street_name) and _normalize_building_number(building_number)
         ):
@@ -199,38 +239,104 @@ class ProNaturaApiClient:
         raise ProNaturaAddressNotFoundError("Address not found")
 
     async def _request(self, path: str, *, context: str | None = None) -> Any:
-        """Perform an HTTP GET request."""
+        """Perform an HTTP GET request with retry logic.
+
+        Retries up to API_MAX_RETRIES times on transient failures using
+        exponential backoff strategy.
+
+        Args:
+            path: The API endpoint path (e.g., "streets")
+            context: Human-readable description for logging
+
+        Returns:
+            Decoded JSON response from the API
+
+        Raises:
+            ProNaturaApiError: On permanent failures or after max retries
+
+        Example:
+            >>> data = await client._request("streets", context="street list")
+            >>> print(f"Found {len(data)} streets")
+        """
         url = f"{BASE_API_URL}/{path}"
         readable_target = context or url
-        _LOGGER.debug("Sending GET request to %s", readable_target)
-        try:
-            async with timeout(API_TIMEOUT):
-                async with self._session.get(url) as response:
-                    _LOGGER.debug(
-                        "ProNatura response status %s for %s",
-                        response.status,
-                        readable_target,
-                    )
-                    await _raise_for_status(response, context=readable_target)
-                    try:
-                        data = await response.json()
-                    except (ContentTypeError, JSONDecodeError) as err:
-                        _LOGGER.warning(
-                            "Invalid JSON payload from ProNatura for %s: %s",
+        last_exception: Exception | None = None
+
+        for attempt in range(API_MAX_RETRIES):
+            if attempt > 0:
+                delay = API_RETRY_DELAY * (2 ** (attempt - 1))  # Exponential backoff
+                _LOGGER.debug(
+                    "Retrying %s (attempt %d/%d) after %.1fs delay",
+                    readable_target,
+                    attempt + 1,
+                    API_MAX_RETRIES,
+                    delay,
+                )
+                await asyncio.sleep(delay)
+
+            _LOGGER.debug(
+                "Sending GET request to %s (attempt %d/%d)",
+                readable_target,
+                attempt + 1,
+                API_MAX_RETRIES,
+            )
+
+            try:
+                async with asyncio.timeout(API_TIMEOUT):
+                    async with self._session.get(url) as response:
+                        _LOGGER.debug(
+                            "ProNatura response status %s for %s",
+                            response.status,
                             readable_target,
-                            err,
                         )
-                        raise ProNaturaApiError(
-                            "Invalid response received from ProNatura"
-                        ) from err
-                    _LOGGER.debug("Decoded JSON payload from %s", readable_target)
-                    return data
-        except TimeoutError as err:
-            _LOGGER.warning("Timed out while fetching %s", readable_target)
-            raise ProNaturaApiError("Timed out while connecting to ProNatura") from err
-        except ClientError as err:
-            _LOGGER.warning("Client error while fetching %s: %s", readable_target, err)
-            raise ProNaturaApiError("Error communicating with ProNatura") from err
+                        await _raise_for_status(response, context=readable_target)
+                        try:
+                            data = await response.json()
+                        except (ContentTypeError, JSONDecodeError) as err:
+                            _LOGGER.warning(
+                                "Invalid JSON payload from ProNatura for %s: %s",
+                                readable_target,
+                                err,
+                            )
+                            raise ProNaturaApiError(
+                                "Invalid response received from ProNatura"
+                            ) from err
+                        _LOGGER.debug("Decoded JSON payload from %s", readable_target)
+                        return data
+
+            except TimeoutError as err:
+                last_exception = err
+                _LOGGER.warning(
+                    "Timed out while fetching %s (attempt %d/%d)",
+                    readable_target,
+                    attempt + 1,
+                    API_MAX_RETRIES,
+                )
+                # Retry on timeout
+                continue
+
+            except ClientError as err:
+                last_exception = err
+                # Only retry on specific transient errors
+                if attempt < API_MAX_RETRIES - 1:
+                    _LOGGER.warning(
+                        "Client error while fetching %s: %s (will retry)",
+                        readable_target,
+                        err,
+                    )
+                    continue
+                else:
+                    _LOGGER.warning(
+                        "Client error while fetching %s: %s (max retries reached)",
+                        readable_target,
+                        err,
+                    )
+                    break
+
+        # All retries exhausted
+        raise ProNaturaApiError(
+            f"Failed after {API_MAX_RETRIES} attempts: {last_exception}"
+        ) from last_exception
 
 
 async def _raise_for_status(
@@ -264,5 +370,25 @@ def _normalize_text(value: str | None) -> str:
 
 
 def _normalize_building_number(value: str | None) -> str:
-    """Return a normalized building number."""
+    """Return a normalized building number for matching.
+
+    Building numbers are normalized by:
+    - Converting to lowercase
+    - Stripping whitespace
+    - Removing all spaces (so "15 A" matches "15A")
+
+    Args:
+        value: The building number to normalize (may be None)
+
+    Returns:
+        Normalized string (empty string if value is None)
+
+    Example:
+        >>> _normalize_building_number("15 A")
+        '15a'
+        >>> _normalize_building_number("PARKING")
+        'parking'
+        >>> _normalize_building_number(None)
+        ''
+    """
     return _normalize_text(value).replace(" ", "")

@@ -19,7 +19,9 @@ CONF_BUILDING_TYPE: Final = "building_type"
 CONF_STREET_ID: Final = "street_id"
 CONF_STREET_NAME: Final = "street_name"
 
-API_TIMEOUT = 10
+API_TIMEOUT: Final = 10
+API_MAX_RETRIES: Final = 3
+API_RETRY_DELAY: Final = 1  # Initial delay in seconds
 UPDATE_INTERVAL = timedelta(days=1)
 
 DEFAULT_ATTRIBUTION: Final = "Data provided by ProNatura"
