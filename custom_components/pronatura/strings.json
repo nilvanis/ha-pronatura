@@ -1,6 +1,6 @@
 {
   "common": {
-    "attribution": "ProNatura"
+    "attribution": "Data provided by ProNatura"
   },
   "config": {
     "step": {
@@ -28,13 +28,14 @@
     },
     "abort": {
       "already_configured": "This address is already configured.",
-      "street_not_found": "The selected street can no longer be configured."
+      "street_not_found": "The selected street can no longer be configured.",
+      "reconfigure_initiated": "Reconfiguration started. The issue will be automatically resolved if reconfiguration succeeds."
     }
   },
   "issues": {
     "address_not_found": {
       "title": "Update your ProNatura address",
-      "description": "Home Assistant can no longer find the configured address {address}. Most probably its name changed in ProNatura database. To fix this issue, reconfigure the integration and pick the address once again."
+      "description": "Home Assistant can no longer find the configured address **{address}**.\n\n**Possible causes:**\n- The address was removed from the ProNatura database\n- The street name or building number changed\n- The ProNatura API is temporarily unavailable\n\n**To fix:** Click the button below to reconfigure the integration and select your address again from the current list."
     }
   },
   "repairs": {

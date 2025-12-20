@@ -5,7 +5,8 @@
     "config": {
         "abort": {
             "already_configured": "Ten adres jest już skonfigurowany.",
-            "street_not_found": "Wybranej ulicy nie można już skonfigurować."
+            "street_not_found": "Wybranej ulicy nie można już skonfigurować.",
+            "reconfigure_initiated": "Rozpoczęto ponowną konfigurację. Problem zostanie automatycznie rozwiązany, jeśli konfiguracja się powiedzie."
         },
         "error": {
             "address_not_found": "Wybrany adres nie jest już dostępny. Wybierz ponownie.",
@@ -35,7 +36,7 @@
     "issues": {
         "address_not_found": {
             "title": "Zaktualizuj adres w integracji ProNatura",
-            "description": "Home Assistant nie może już znaleźć skonfigurowanego adresu {address}. Prawdopodobnie zmieniła się jego nazwa w bazie danych ProNatura. Aby rozwiązać problem ponownie skonfiguruj integrację i wybierz adres."
+            "description": "Home Assistant nie może już znaleźć skonfigurowanego adresu **{address}**.\n\n**Możliwe przyczyny:**\n- Adres został usunięty z bazy danych ProNatura\n- Zmieniono nazwę ulicy lub numer budynku\n- API ProNatura jest tymczasowo niedostępne\n\n**Rozwiązanie:** Kliknij poniższy przycisk, aby ponownie skonfigurować integrację i wybrać adres z aktualnej listy."
         }
     },
     "repairs": {
