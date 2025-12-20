@@ -64,7 +64,6 @@ class ProNaturaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a reconfiguration initiated from Repairs."""
         self._reconfigure_entry = self._get_reconfigure_entry()
-        await self._async_force_entry_refresh(self._reconfigure_entry)
         return await self.async_step_user(user_input)
 
     async def async_step_user(
@@ -162,6 +161,8 @@ class ProNaturaConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 title = format_address_label(street_name, building_number, address_name)
                 if self.source == SOURCE_RECONFIGURE and reconfigure_entry is not None:
+                    # Force refresh before updating to ensure we have latest data
+                    await self._async_force_entry_refresh(reconfigure_entry)
                     return self.async_update_reload_and_abort(
                         reconfigure_entry,
                         unique_id=address_id,
