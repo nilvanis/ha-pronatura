@@ -1,0 +1,30 @@
+{
+  "id": "252658c2-d9fd-4935-84bb-2fe1f742a340",
+  "year": 2025,
+  "street": "11 DYWIZJONU ARTYLERII KONNEJ",
+  "buildingNumber": "16",
+  "city": "BYDGOSZCZ",
+  "area": "6",
+  "name": null,
+  "buildingType": "MIESZKALNA",
+  "trashSchedule": [
+    {
+      "month": "invalid_month",
+      "schedule": [
+        {
+          "type": "odpady zmieszane",
+          "days": ["not_a_number", "32", "invalid"]
+        }
+      ]
+    },
+    {
+      "month": "Grudzień",
+      "schedule": [
+        {
+          "type": "papier",
+          "days": ["abc", "15"]
+        }
+      ]
+    }
+  ]
+}

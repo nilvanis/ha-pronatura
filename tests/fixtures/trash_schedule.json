@@ -1,0 +1,516 @@
+{
+    "id": "252658c2-d9fd-4935-84bb-2fe1f742a340",
+    "year": 2025,
+    "street": "11 DYWIZJONU ARTYLERII KONNEJ",
+    "buildingNumber": "16",
+    "city": "BYDGOSZCZ",
+    "area": "6",
+    "name": null,
+    "buildingType": "MIESZKALNA",
+    "trashSchedule": [
+        {
+            "month": "Styczeń",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "13",
+                        "27"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "07"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "07"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "07"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "08"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": []
+                }
+            ]
+        },
+        {
+            "month": "Luty",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "10",
+                        "24"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "04"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "04"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "04"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "05"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": [
+                        "06"
+                    ]
+                }
+            ]
+        },
+        {
+            "month": "Marzec",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "10",
+                        "24"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "04"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "04"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "04"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "05",
+                        "19"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": []
+                }
+            ]
+        },
+        {
+            "month": "Kwiecień",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "07",
+                        "21"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "01",
+                        "29"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "01",
+                        "29"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "01",
+                        "29"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "02",
+                        "16",
+                        "30"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": []
+                }
+            ]
+        },
+        {
+            "month": "Maj",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "05",
+                        "19"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "27"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "27"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "27"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "14",
+                        "28"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": [
+                        "08"
+                    ]
+                }
+            ]
+        },
+        {
+            "month": "Czerwiec",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "02",
+                        "16",
+                        "30"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "24"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "24"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "24"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "11",
+                        "25"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": []
+                }
+            ]
+        },
+        {
+            "month": "Lipiec",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "14",
+                        "28"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "22"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "22"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "22"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "09",
+                        "23"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": []
+                }
+            ]
+        },
+        {
+            "month": "Sierpień",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "11",
+                        "25"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "19"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "19"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "19"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "06",
+                        "20"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": [
+                        "07"
+                    ]
+                }
+            ]
+        },
+        {
+            "month": "Wrzesień",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "08",
+                        "22"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "16"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "16"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "16"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "03",
+                        "17"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": []
+                }
+            ]
+        },
+        {
+            "month": "Październik",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "06",
+                        "20"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "14"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "14"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "14"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "01",
+                        "15",
+                        "29"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": []
+                }
+            ]
+        },
+        {
+            "month": "Listopad",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "03",
+                        "17"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "11"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "11"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "11"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "12",
+                        "26"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": [
+                        "06"
+                    ]
+                }
+            ]
+        },
+        {
+            "month": "Grudzień",
+            "schedule": [
+                {
+                    "type": "odpady zmieszane",
+                    "days": [
+                        "01",
+                        "15",
+                        "29"
+                    ]
+                },
+                {
+                    "type": "papier",
+                    "days": [
+                        "09"
+                    ]
+                },
+                {
+                    "type": "plastik",
+                    "days": [
+                        "09"
+                    ]
+                },
+                {
+                    "type": "szkło",
+                    "days": [
+                        "09"
+                    ]
+                },
+                {
+                    "type": "odpady bio",
+                    "days": [
+                        "10"
+                    ]
+                },
+                {
+                    "type": "odpady wielkogabarytowe",
+                    "days": []
+                }
+            ]
+        }
+    ]
+}

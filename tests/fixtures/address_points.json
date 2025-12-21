@@ -1,0 +1,20 @@
+[
+    {
+        "id": "970e7a2b-b4ae-488b-a8ec-cf316bf907f1",
+        "buildingNumber": "14",
+        "buildingType": "MIESZKALNA",
+        "name": null
+    },
+    {
+        "id": "252658c2-d9fd-4935-84bb-2fe1f742a340",
+        "buildingNumber": "16",
+        "buildingType": "MIESZKALNA",
+        "name": null
+    },
+    {
+        "id": "49245f2f-7fa0-4271-a986-1adaac5a93b2",
+        "buildingNumber": "PARKING",
+        "buildingType": "NIEMIESZKALNA",
+        "name": "BYDGOSKA SPÓŁDZIELNIA MIESZKANIOWA"
+    }
+]
