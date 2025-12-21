@@ -38,15 +38,5 @@
             "title": "Zaktualizuj adres w integracji ProNatura",
             "description": "Home Assistant nie może już znaleźć skonfigurowanego adresu **{address}**.\n\n**Możliwe przyczyny:**\n- Adres został usunięty z bazy danych ProNatura\n- Zmieniono nazwę ulicy lub numer budynku\n- API ProNatura jest tymczasowo niedostępne\n\n**Rozwiązanie:** Kliknij poniższy przycisk, aby ponownie skonfigurować integrację i wybrać adres z aktualnej listy."
         }
-    },
-    "repairs": {
-        "address_not_found": {
-            "step": {
-                "confirm": {
-                    "title": "Skonfiguruj ponownie adres ProNatura",
-                    "description": "Home Assistant rozpocznie ponowną konfigurację ProNatura dla {title}, abyś mógł ponownie wybrać adres."
-                }
-            }
-        }
     }
 }

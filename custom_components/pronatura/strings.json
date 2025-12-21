@@ -37,15 +37,5 @@
       "title": "Update your ProNatura address",
       "description": "Home Assistant can no longer find the configured address **{address}**.\n\n**Possible causes:**\n- The address was removed from the ProNatura database\n- The street name or building number changed\n- The ProNatura API is temporarily unavailable\n\n**To fix:** Click the button below to reconfigure the integration and select your address again from the current list."
     }
-  },
-  "repairs": {
-    "address_not_found": {
-      "step": {
-        "confirm": {
-          "title": "Reconfigure ProNatura address",
-          "description": "Home Assistant will start reconfiguring ProNatura for {title} so you can pick the address again."
-        }
-      }
-    }
   }
 }
