@@ -14,6 +14,7 @@ Runs all checks that are performed in GitHub Actions CI pipeline:
 - **Hassfest** - Home Assistant integration validation
 
 **Usage:**
+
 ```bash
 ./scripts/run_checks.sh
 ```
@@ -25,11 +26,35 @@ This is useful to run before pushing to ensure your changes will pass CI.
 Runs only the hassfest validation for the pronatura custom component.
 
 **Usage:**
+
 ```bash
 ./scripts/run_hassfest.sh
 ```
 
 This is faster than the full check suite when you only need to validate the integration manifest and translations.
+
+### `run_tests_docker.sh`
+
+Runs all checks (linting, formatting, tests) in a Docker container using the same Python environment as GitHub Actions. This ensures your local tests match the CI environment exactly.
+
+**Usage:**
+
+```bash
+./scripts/run_tests_docker.sh
+```
+
+**Advanced usage with different Python versions:**
+
+```bash
+PYTHON_VERSION=3.12 ./scripts/run_tests_docker.sh
+```
+
+This script:
+
+- Uses the official Python Docker image (default: 3.13-slim)
+- Installs dependencies fresh each time (no cache issues)
+- Runs ruff linting, formatting, and pytest
+- Matches the GitHub Actions CI environment closely
 
 ## Requirements
 
