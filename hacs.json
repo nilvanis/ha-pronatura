@@ -1,5 +1,6 @@
 {
   "name": "ProNatura Garbage Collection Schedules",
   "country": ["PL"],
-  "content_in_root": false
+  "content_in_root": false,
+  "homeassistant": "2024.4.0"
 }
