@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from custom_components.pronatura.const import (
     ATTRIBUTION_TRANSLATION_KEY,
@@ -92,7 +92,7 @@ class TestProNaturaEntity:
 
         with patch(
             "homeassistant.helpers.translation.async_get_cached_translations",
-            new=AsyncMock(return_value=translations),
+            return_value=translations,
         ):
             await entity.async_added_to_hass()
 
@@ -116,7 +116,7 @@ class TestProNaturaEntity:
 
         with patch(
             "homeassistant.helpers.translation.async_get_cached_translations",
-            new=AsyncMock(return_value=translations),
+            return_value=translations,
         ):
             await entity.async_added_to_hass()
 
