@@ -130,7 +130,7 @@ async def mock_coordinator(
     hass: HomeAssistant,
     mock_config_entry: ProNaturaConfigEntry,
     mock_pronatura_api: ProNaturaApiClient,
-) -> ProNaturaDataUpdateCoordinator:
+):
     """Return a mock coordinator with test data."""
     from datetime import date
 
@@ -167,7 +167,11 @@ async def mock_coordinator(
         ),
     )
 
-    return coordinator
+    yield coordinator
+
+    # Cleanup: cancel the midnight refresh timer to avoid "lingering timer" errors
+    if hasattr(coordinator, "_new_day_listener"):
+        coordinator._new_day_listener()
 
 
 @pytest.fixture(autouse=True)
