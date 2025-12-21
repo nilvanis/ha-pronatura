@@ -1,4 +1,9 @@
-"""Constants for the ProNatura integration."""
+"""Constants and configuration values for the ProNatura integration.
+
+This module centralizes all constant values including API configuration,
+configuration keys, Polish month name mappings, and Material Design icon
+assignments for different waste fraction types.
+"""
 
 from __future__ import annotations
 
@@ -26,6 +31,7 @@ UPDATE_INTERVAL = timedelta(days=1)
 
 DEFAULT_ATTRIBUTION: Final = "Data provided by ProNatura"
 ATTRIBUTION_TRANSLATION_KEY: Final = f"component.{DOMAIN}.common.attribution"
+AREA_PREFIX: Final = "strefa: "
 
 MONTH_NAME_TO_NUMBER: Final = {
     "styczeń": 1,

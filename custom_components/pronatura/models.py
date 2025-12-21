@@ -1,4 +1,8 @@
-"""Model helpers for the ProNatura integration."""
+"""Type definitions and data models for the ProNatura integration.
+
+This module defines runtime data structures and type aliases used throughout
+the integration to maintain type safety and proper data encapsulation.
+"""
 
 from __future__ import annotations
 

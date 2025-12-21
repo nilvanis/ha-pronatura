@@ -97,7 +97,7 @@ class ProNaturaCollectionSensor(ProNaturaEntity, SensorEntity):
         next_date = self.native_value
         days_until: int | None = None
         if next_date:
-            today = dt_util.now(self.coordinator._timezone).date()
+            today = dt_util.now(self.coordinator.timezone).date()
             delta = next_date - today
             days_until = delta.days
 

@@ -138,9 +138,7 @@ class ProNaturaConfigFlow(ConfigFlow, domain=DOMAIN):
                 if self.source == SOURCE_RECONFIGURE and reconfigure_entry is None:
                     reconfigure_entry = self._get_reconfigure_entry()
 
-                if self.source != SOURCE_RECONFIGURE:
-                    self._abort_if_unique_id_configured()
-                elif (
+                if self.source != SOURCE_RECONFIGURE or (
                     existing_entry
                     and reconfigure_entry is not None
                     and existing_entry.entry_id != reconfigure_entry.entry_id

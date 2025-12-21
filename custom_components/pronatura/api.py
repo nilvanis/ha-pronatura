@@ -202,10 +202,14 @@ class ProNaturaApiClient:
         if not (
             _normalize_text(street_name) and _normalize_building_number(building_number)
         ):
-            raise ProNaturaApiError("Missing data required to resolve address")
+            raise ProNaturaApiError(
+                "Missing street name or building number required to resolve address"
+            )
 
         if not (_streets := await self.async_get_streets()):
-            raise ProNaturaApiError("No streets returned by ProNatura")
+            raise ProNaturaApiError(
+                "No streets available from ProNatura API - service may be unavailable"
+            )
 
         street_id: str | None = None
         normalized_street = _normalize_text(street_name)
@@ -215,7 +219,9 @@ class ProNaturaApiClient:
                 break
 
         if street_id is None:
-            raise ProNaturaStreetNotFoundError("Street not found")
+            raise ProNaturaStreetNotFoundError(
+                f"Street '{street_name}' not found in ProNatura database"
+            )
 
         addresses = await self.async_get_address_points(
             street_id, street_name=street_name
@@ -236,7 +242,9 @@ class ProNaturaApiClient:
                 continue
             return await self.async_get_trash_schedule(address["id"], label=label)
 
-        raise ProNaturaAddressNotFoundError("Address not found")
+        raise ProNaturaAddressNotFoundError(
+            f"Address '{building_number}' on street '{street_name}' not found in ProNatura database"
+        )
 
     async def _request(self, path: str, *, context: str | None = None) -> Any:
         """Perform an HTTP GET request with retry logic.
@@ -325,13 +333,12 @@ class ProNaturaApiClient:
                         err,
                     )
                     continue
-                else:
-                    _LOGGER.warning(
-                        "Client error while fetching %s: %s (max retries reached)",
-                        readable_target,
-                        err,
-                    )
-                    break
+                _LOGGER.warning(
+                    "Client error while fetching %s: %s (max retries reached)",
+                    readable_target,
+                    err,
+                )
+                break
 
         # All retries exhausted
         raise ProNaturaApiError(

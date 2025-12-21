@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.config_entries import ConfigEntry, SOURCE_RECONFIGURE
+from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigEntry
 from homeassistant.core import HomeAssistant
 
 

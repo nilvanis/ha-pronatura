@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from datetime import date
+import json
+from pathlib import Path
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -16,7 +18,22 @@ from .const import (
     CONF_BUILDING_TYPE,
     CONF_STREET_NAME,
 )
+from .coordinator import ProNaturaAddressDetails
 from .models import ProNaturaConfigEntry
+
+
+def _load_integration_version() -> str:
+    """Load the integration version from manifest.json."""
+    manifest_path = Path(__file__).parent / "manifest.json"
+    try:
+        with open(manifest_path, encoding="utf-8") as f:
+            manifest = json.load(f)
+            return manifest.get("version", "unknown")
+    except (OSError, json.JSONDecodeError):
+        return "unknown"
+
+
+INTEGRATION_VERSION = _load_integration_version()
 
 ENTRY_REDACT_KEYS = {
     CONF_ADDRESS_ID,
@@ -75,19 +92,21 @@ async def async_get_config_entry_diagnostics(
         "raw_schedule": raw_schedule,
         "coordinator_status": {
             "last_update_success": coordinator.last_update_success,
-            "last_update_time": coordinator.last_update_success_time.isoformat()
-                if coordinator.last_update_success_time else None,
             "update_interval_seconds": coordinator.update_interval.total_seconds()
-                if coordinator.update_interval else None,
+            if coordinator.update_interval
+            else None,
             "schedule_cache_age_seconds": (
-                (dt_util.utcnow() - coordinator.schedule_cache_timestamp).total_seconds()
-                if coordinator.schedule_cache_timestamp else None
+                (
+                    dt_util.utcnow() - coordinator.schedule_cache_timestamp
+                ).total_seconds()
+                if coordinator.schedule_cache_timestamp
+                else None
             ),
         },
         "system_info": {
             "timezone": str(hass.config.time_zone),
-            "current_time": dt_util.now(hass.config.time_zone).isoformat(),
-            "integration_version": "1.0.4",
+            "current_time": dt_util.now().isoformat(),
+            "integration_version": INTEGRATION_VERSION,
         },
     }
 
@@ -95,11 +114,12 @@ async def async_get_config_entry_diagnostics(
 def _serialize_dates(source: dict[str, date | None]) -> dict[str, str | None]:
     """Convert dates to ISO strings."""
     return {
-        fraction: value.isoformat() if value else None for fraction, value in source.items()
+        fraction: value.isoformat() if value else None
+        for fraction, value in source.items()
     }
 
 
-def _serialize_details(details) -> dict[str, Any]:
+def _serialize_details(details: ProNaturaAddressDetails) -> dict[str, Any]:
     """Serialize address metadata."""
     return {
         "full_address": details.full_address,

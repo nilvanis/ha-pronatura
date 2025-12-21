@@ -33,7 +33,7 @@ from .const import (
 from .models import ProNaturaConfigEntry
 from .util import format_address_label
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -80,7 +80,7 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
         """Initialize the coordinator."""
         super().__init__(
             hass,
-            logger=LOGGER,
+            logger=_LOGGER,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
             config_entry=entry,
@@ -120,7 +120,9 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
         except ProNaturaApiError as err:
             raise UpdateFailed(err) from err
 
-        next_dates, previous_dates = _compute_next_collection_dates(schedule, self._timezone)
+        next_dates, previous_dates = _compute_next_collection_dates(
+            schedule, self._timezone
+        )
         details = _build_address_details(schedule, self._entry.data)
         self._clear_address_issue()
         return ProNaturaCollectionData(
@@ -133,7 +135,7 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
     def _report_address_issue(self, error: Exception) -> None:
         """Log the failure details and create a repair issue for missing addresses."""
         if not self._issue_active:
-            LOGGER.warning(
+            _LOGGER.warning(
                 "Address %s is no longer available in ProNatura (%s); please reconfigure the integration entry",
                 self._address_label,
                 error,
@@ -160,7 +162,7 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
         """Log recovery and remove the repair issue once the schedule resolves again."""
         if not self._issue_active:
             return
-        LOGGER.info(
+        _LOGGER.info(
             "Address %s is available again; clearing repair issue", self._address_label
         )
         ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
@@ -182,6 +184,11 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
     def schedule_cache_timestamp(self) -> datetime | None:
         """Return the timestamp when the schedule was last cached (for diagnostics)."""
         return self._schedule_cache_timestamp
+
+    @property
+    def timezone(self) -> tzinfo:
+        """Return the timezone for this coordinator."""
+        return self._timezone
 
     async def _async_get_or_fetch_schedule(
         self, now: datetime
@@ -318,11 +325,11 @@ def _compute_next_collection_dates(
 
     trash_schedule = schedule.get("trashSchedule", [])
     if not isinstance(trash_schedule, list):
-        LOGGER.debug(
+        _LOGGER.debug(
             "Ignoring ProNatura trashSchedule with unexpected type: %s",
             type(trash_schedule).__name__,
         )
-        return {}
+        return {}, {}
 
     for month_info in trash_schedule:
         if not isinstance(month_info, CollectionsMapping):
@@ -339,9 +346,7 @@ def _compute_next_collection_dates(
 
         for fraction in month_info.get("schedule", []):
             if not isinstance(fraction, CollectionsMapping):
-                invalid_fraction_entries.append(
-                    f"{month_label or '?'}={fraction!s}"
-                )
+                invalid_fraction_entries.append(f"{month_label or '?'}={fraction!s}")
                 continue
 
             fraction_name = fraction.get("type")
@@ -373,22 +378,22 @@ def _compute_next_collection_dates(
                     tracker.next_date = candidate
 
     if unknown_month_labels:
-        LOGGER.debug(
+        _LOGGER.debug(
             "Ignoring ProNatura schedule months with unknown labels: %s",
             ", ".join(sorted(unknown_month_labels)),
         )
     if invalid_day_entries:
-        LOGGER.debug(
+        _LOGGER.debug(
             "Ignoring ProNatura schedule entries with invalid days: %s",
             ", ".join(invalid_day_entries),
         )
     if invalid_month_entries:
-        LOGGER.debug(
+        _LOGGER.debug(
             "Ignoring ProNatura schedule entries with invalid month data: %s",
             ", ".join(invalid_month_entries),
         )
     if invalid_fraction_entries:
-        LOGGER.debug(
+        _LOGGER.debug(
             "Ignoring ProNatura schedule entries with invalid fraction data: %s",
             ", ".join(invalid_fraction_entries),
         )

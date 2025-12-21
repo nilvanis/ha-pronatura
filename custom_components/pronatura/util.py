@@ -32,7 +32,8 @@ def format_address_label(
         'Rynek 1 (URZĄD MIASTA)'
     """
     street_clean = (street or "").title()
-    base = f"{street_clean} {building or ''}".strip()
+    building_clean = (building or "").strip()
+    base = f"{street_clean} {building_clean}".strip()
     if name:
         return f"{base} ({name})"
     return base

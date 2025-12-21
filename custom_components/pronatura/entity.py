@@ -7,6 +7,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    AREA_PREFIX,
     ATTRIBUTION_TRANSLATION_KEY,
     CONF_ADDRESS_ID,
     CONF_ADDRESS_NAME,
@@ -45,7 +46,7 @@ class ProNaturaEntity(CoordinatorEntity[ProNaturaDataUpdateCoordinator]):
     async def async_added_to_hass(self) -> None:
         """Update translated fields after the entity is added."""
         await super().async_added_to_hass()
-        translations = await translation_helper.async_get_cached_translations(
+        translations = translation_helper.async_get_cached_translations(
             self.hass,
             self.hass.config.language,
             "component",
@@ -62,17 +63,17 @@ class ProNaturaEntity(CoordinatorEntity[ProNaturaDataUpdateCoordinator]):
         details = self._coordinator_details()
 
         name = format_address_label(
-            details.street if details else self._street,
-            details.building_number if details else self._building_number,
-            (details.address_name if details else None) or self._address_name,
+            (details and details.street) or self._street,
+            (details and details.building_number) or self._building_number,
+            (details and details.address_name) or self._address_name,
         )
         model_parts = [name]
-        building_type = details.building_type if details else self._building_type
+        building_type = (details and details.building_type) or self._building_type
         if building_type:
             model_parts.append(str(building_type))
         area = details.area if details else None
         if area:
-            model_parts.append(f"strefa: {area}")
+            model_parts.append(f"{AREA_PREFIX}{area}")
         model = ", ".join(model_parts)
 
         return DeviceInfo(
