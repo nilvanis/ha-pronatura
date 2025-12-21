@@ -98,7 +98,9 @@ def aioclient_mock(mock_api_responses):
 
 
 @pytest.fixture
-async def mock_pronatura_api(hass: HomeAssistant) -> AsyncGenerator[ProNaturaApiClient, None]:
+async def mock_pronatura_api(
+    hass: HomeAssistant,
+) -> AsyncGenerator[ProNaturaApiClient, None]:
     """Return a mock ProNatura API client."""
     from aiohttp import ClientSession
 
