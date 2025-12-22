@@ -58,7 +58,7 @@ This script:
 
 ## Requirements
 
-- Python 3.12 or 3.13
+- Python 3.13
 - Docker (for hassfest validation)
 - Virtual environment set up at `.venv/` with dependencies installed:
 
