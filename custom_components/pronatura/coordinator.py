@@ -293,7 +293,7 @@ def _compute_next_collection_dates(
     Returns:
         Tuple of (next_dates, previous_dates) where each is a dictionary
         mapping fraction names to their respective collection dates.
-        For next_dates, falls back to previous_date if no future dates exist.
+        next_dates contains None if no future collection is scheduled.
 
     Example:
         >>> from datetime import date
@@ -399,8 +399,7 @@ def _compute_next_collection_dates(
         )
 
     next_dates = {
-        fraction_name: tracker.next_date or tracker.previous_date
-        for fraction_name, tracker in fractions.items()
+        fraction_name: tracker.next_date for fraction_name, tracker in fractions.items()
     }
     previous_dates = {
         fraction_name: tracker.previous_date

@@ -97,10 +97,15 @@ class ProNaturaCollectionSensor(ProNaturaEntity, SensorEntity):
         # Calculate days until next collection
         next_date = self.native_value
         days_until: int | None = None
+        collection_status: str
+
         if next_date:
             today = dt_util.now(self.coordinator.timezone).date()
             delta = next_date - today
             days_until = delta.days
+            collection_status = "scheduled"
+        else:
+            collection_status = "no_schedule"
 
         # Get last collection date
         previous_date = coordinator_data.previous_dates.get(self._fraction)
@@ -110,6 +115,7 @@ class ProNaturaCollectionSensor(ProNaturaEntity, SensorEntity):
             "fraction_name": self._fraction,
             "area": details.area,
             "building_type": details.building_type,
+            "collection_status": collection_status,
             "days_until_collection": days_until,
             "last_collection": previous_date.isoformat() if previous_date else None,
         }

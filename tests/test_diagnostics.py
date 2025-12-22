@@ -149,8 +149,8 @@ class TestDiagnostics:
         diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
         # Should be ISO format strings
-        assert diagnostics["next_dates"]["odpady zmieszane"] == "2025-01-13"
-        assert diagnostics["next_dates"]["papier"] == "2025-01-07"
+        assert diagnostics["next_dates"]["odpady zmieszane"] == "2025-06-02"
+        assert diagnostics["next_dates"]["papier"] == "2025-06-24"
 
     async def test_previous_dates_serialization(
         self,
@@ -164,9 +164,9 @@ class TestDiagnostics:
 
         diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
-        # Should be ISO format strings (None for dates before Jan 1)
-        assert diagnostics["previous_dates"]["odpady zmieszane"] is None
-        assert diagnostics["previous_dates"]["papier"] is None
+        # Should be ISO format strings (dates from May)
+        assert diagnostics["previous_dates"]["odpady zmieszane"] == "2025-05-19"
+        assert diagnostics["previous_dates"]["papier"] == "2025-05-27"
 
     async def test_date_serialization_with_none(
         self,

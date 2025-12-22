@@ -387,7 +387,7 @@ class TestProNaturaDataUpdateCoordinator:
             entry=mock_config_entry,
         )
 
-        with freeze_time("2025-01-01"):
+        with freeze_time("2025-06-01"):
             await coordinator.async_config_entry_first_refresh()
 
         # Mock async_request_refresh
@@ -395,7 +395,7 @@ class TestProNaturaDataUpdateCoordinator:
             coordinator, "async_request_refresh", new_callable=AsyncMock
         ) as mock_refresh:
             # Trigger the new day handler
-            await coordinator._async_handle_new_day(datetime(2025, 1, 2))
+            await coordinator._async_handle_new_day(datetime(2025, 6, 2))
 
             # Should have called refresh
             assert mock_refresh.called
@@ -422,7 +422,7 @@ class TestProNaturaDataUpdateCoordinator:
             entry=mock_config_entry,
         )
 
-        with freeze_time("2025-01-01"):
+        with freeze_time("2025-06-01"):
             await coordinator.async_config_entry_first_refresh()
 
         # Mock async_request_refresh
@@ -431,7 +431,7 @@ class TestProNaturaDataUpdateCoordinator:
         ) as mock_refresh:
             # Simulate HA stopping
             with patch.object(hass, "is_stopping", True):
-                await coordinator._async_handle_new_day(datetime(2025, 1, 2))
+                await coordinator._async_handle_new_day(datetime(2025, 6, 2))
 
             # Should NOT have called refresh
             assert not mock_refresh.called
@@ -442,7 +442,7 @@ class TestProNaturaDataUpdateCoordinator:
 class TestComputeNextCollectionDates:
     """Tests for date computation logic."""
 
-    @freeze_time("2025-01-01")
+    @freeze_time("2025-06-01")
     def test_compute_dates_normal_schedule(self):
         """Test date computation with normal schedule."""
         schedule_data = load_fixture("trash_schedule.json")
@@ -450,13 +450,13 @@ class TestComputeNextCollectionDates:
             schedule_data, dt_util.DEFAULT_TIME_ZONE
         )
 
-        # From Jan 1, next collection dates in January
-        assert next_dates["odpady zmieszane"] == date(2025, 1, 13)
-        assert next_dates["papier"] == date(2025, 1, 7)
+        # From Jun 1, next collection dates in June
+        assert next_dates["odpady zmieszane"] == date(2025, 6, 2)
+        assert next_dates["papier"] == date(2025, 6, 24)
 
-        # Previous dates should be None (no collection before Jan 1)
-        assert previous_dates.get("odpady zmieszane") is None
-        assert previous_dates.get("papier") is None
+        # Previous dates should be from May
+        assert previous_dates.get("odpady zmieszane") == date(2025, 5, 19)
+        assert previous_dates.get("papier") == date(2025, 5, 27)
 
     @freeze_time("2025-01-20")
     def test_compute_dates_with_past_dates(self):
@@ -474,15 +474,34 @@ class TestComputeNextCollectionDates:
         assert previous_dates["odpady zmieszane"] == date(2025, 1, 13)
         assert previous_dates["papier"] == date(2025, 1, 7)
 
-    @freeze_time("2025-01-01")
+    @freeze_time("2025-12-31")
     def test_compute_dates_no_future_dates(self):
-        """Test fallback when no future dates exist."""
+        """Test behavior when no future dates exist (end of schedule year)."""
+        schedule_data = load_fixture("trash_schedule.json")
+        next_dates, previous_dates = _compute_next_collection_dates(
+            schedule_data, dt_util.DEFAULT_TIME_ZONE
+        )
+
+        # From Dec 31, no future dates exist in the schedule
+        # next_dates should be None (not falling back to previous dates)
+        assert next_dates["odpady zmieszane"] is None
+        assert next_dates["papier"] is None
+        assert next_dates["szkło"] is None
+
+        # Previous dates should be from December
+        assert previous_dates["odpady zmieszane"] == date(2025, 12, 29)
+        assert previous_dates["papier"] == date(2025, 12, 9)
+        assert previous_dates["szkło"] == date(2025, 12, 9)
+
+    @freeze_time("2025-06-01")
+    def test_compute_dates_empty_schedule(self):
+        """Test handling of completely empty schedule."""
         schedule_data = load_fixture("trash_schedule_empty.json")
         next_dates, previous_dates = _compute_next_collection_dates(
             schedule_data, dt_util.DEFAULT_TIME_ZONE
         )
 
-        # With empty schedule, all should be None
+        # With empty schedule, all should be empty dicts
         assert len(next_dates) == 0
         assert len(previous_dates) == 0
 
@@ -515,7 +534,7 @@ class TestComputeNextCollectionDates:
         for month_name, expected_num in test_months:
             assert MONTH_NAME_TO_NUMBER[month_name] == expected_num
 
-    @freeze_time("2025-01-01")
+    @freeze_time("2025-06-01")
     def test_invalid_month_handling(self):
         """Test handling of invalid month names."""
         schedule_data = load_fixture("trash_schedule_malformed.json")
@@ -528,7 +547,7 @@ class TestComputeNextCollectionDates:
         # Should still process valid "Grudzień" month
         assert "papier" in next_dates or "papier" in previous_dates
 
-    @freeze_time("2025-01-01")
+    @freeze_time("2025-06-01")
     def test_invalid_day_handling(self):
         """Test handling of invalid day entries."""
         schedule_data = load_fixture("trash_schedule_malformed.json")
@@ -541,7 +560,7 @@ class TestComputeNextCollectionDates:
         # Should process valid day "15" from malformed schedule
         # Invalid days are logged but don't crash
 
-    @freeze_time("2025-01-01")
+    @freeze_time("2025-06-01")
     def test_malformed_schedule_data(self):
         """Test handling of malformed schedule structure."""
         # Test with invalid trashSchedule (not a list)
@@ -552,7 +571,7 @@ class TestComputeNextCollectionDates:
         assert next_dates == {}
         assert previous_dates == {}
 
-    @freeze_time("2025-01-01")
+    @freeze_time("2025-06-01")
     def test_malformed_month_entries(self):
         """Test handling of non-dict month entries."""
         schedule_data = {
@@ -580,14 +599,14 @@ class TestComputeNextCollectionDates:
                 for call in mock_logger.debug.call_args_list
             )
 
-    @freeze_time("2025-01-01")
+    @freeze_time("2025-06-01")
     def test_malformed_fraction_entries(self):
         """Test handling of non-dict fraction entries."""
         schedule_data = {
             "year": 2025,
             "trashSchedule": [
                 {
-                    "month": "styczeń",
+                    "month": "czerwiec",
                     "schedule": [
                         "invalid fraction",  # Should be skipped
                         456,  # Should be skipped
@@ -610,14 +629,14 @@ class TestComputeNextCollectionDates:
                 for call in mock_logger.debug.call_args_list
             )
 
-    @freeze_time("2025-01-01")
+    @freeze_time("2025-06-01")
     def test_missing_fraction_type(self):
         """Test handling of fractions with missing type field."""
         schedule_data = {
             "year": 2025,
             "trashSchedule": [
                 {
-                    "month": "styczeń",
+                    "month": "czerwiec",
                     "schedule": [
                         {"days": ["15"]},  # Missing "type" field
                         {"type": "", "days": ["20"]},  # Empty type
@@ -633,22 +652,22 @@ class TestComputeNextCollectionDates:
 
         # Should only process the valid fraction
         assert "odpady zmieszane" in next_dates
-        assert next_dates["odpady zmieszane"] == date(2025, 1, 25)
+        assert next_dates["odpady zmieszane"] == date(2025, 6, 25)
 
-    @freeze_time("2025-01-01")
+    @freeze_time("2025-06-01")
     def test_invalid_day_values(self):
         """Test handling of invalid day values (non-numeric, out of range)."""
         schedule_data = {
             "year": 2025,
             "trashSchedule": [
                 {
-                    "month": "styczeń",
+                    "month": "czerwiec",
                     "schedule": [
                         {
                             "type": "odpady zmieszane",
                             "days": [
                                 "not_a_number",  # Invalid
-                                "32",  # Out of range for January
+                                "31",  # Out of range for June (only 30 days)
                                 None,  # Invalid type
                                 "15",  # Valid
                             ],
@@ -665,13 +684,13 @@ class TestComputeNextCollectionDates:
 
             # Should process valid day but skip invalid
             assert "odpady zmieszane" in next_dates
-            assert next_dates["odpady zmieszane"] == date(2025, 1, 15)
+            assert next_dates["odpady zmieszane"] == date(2025, 6, 15)
             # Logger should warn about invalid days
             assert any(
                 "invalid days" in str(call) for call in mock_logger.debug.call_args_list
             )
 
-    @freeze_time("2025-01-01")
+    @freeze_time("2025-06-01")
     def test_fraction_discovery(self):
         """Test that all fractions are discovered."""
         schedule_data = load_fixture("trash_schedule.json")
@@ -692,7 +711,7 @@ class TestComputeNextCollectionDates:
         all_fractions = set(next_dates.keys()) | set(previous_dates.keys())
         assert expected_fractions.issubset(all_fractions)
 
-    @freeze_time("2025-01-01")
+    @freeze_time("2025-06-01")
     def test_empty_schedule_list(self):
         """Test handling of empty schedule list."""
         schedule_data = {"year": 2025, "trashSchedule": []}

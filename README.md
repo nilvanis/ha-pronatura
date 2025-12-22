@@ -44,9 +44,9 @@ Możesz też ręcznie wyszukać integrację w HACS wpisując w wyszukiwarkę `Pr
 ## Dane sensorów
 
 Każda frakcja odpadów znajdująca się w harmonogramie generuje dedyowany sensor, którego wartością jest data (`date`)
-najbliższego dnia wywozu danej frakcji. W przypadu, gdy w harmonogramie nie ma już kolejnej daty, sensor pozostawi poprzednią.
-W niektórych przypadkach harmonogram dla danej frakcji istnieje, ale ejst pusty - w takim wypadku sensor est tworzony,
-ale jego status będzie `unknown`.
+najbliższego dnia wywozu danej frakcji. Gdy w harmonogramie nie ma już kolejnej daty, sensor pokazuje status `unknown`.
+W niektórych przypadkach harmonogram dla danej frakcji istnieje, ale jest pusty - w takim wypadku sensor jest tworzony,
+ale jego status również będzie `unknown`.
 
 Atrybuty:
 
@@ -54,8 +54,9 @@ Atrybuty:
 - `fraction_name` – nazwa frakcji (dostarczona przez API ProNatura)
 - `area` - obszar wywozu śmieci wg ProNatura
 - `building_type` - typ budynku (np. `MIESZKALNA`, `NIEMIESZKALNA`)
-- `address_name` - opcjonalne, dostepne gdy ProNatura dostarcza własną, dodatkową nazwę dla nieruchomości
-- `days_until_collection` - ilość dni do najbliższej daty wywozu frakcji
+- `address_name` - opcjonalne, dostępne gdy ProNatura dostarcza własną, dodatkową nazwę dla nieruchomości
+- `collection_status` - status odbioru: `scheduled` (zaplanowany) lub `no_schedule` (brak harmonogramu)
+- `days_until_collection` - ilość dni do najbliższej daty wywozu frakcji (gdy brak daty: `null`)
 - `last_collection` - data ostatniego odbioru frakcji wg harmonogramu
 
 Dane z API odświeżane są raz na dobę, aby niepotrzebnie nie obciążać serwisu.\
@@ -101,7 +102,7 @@ You can also find the integration manually in HACS by searching for `ProNatura` 
 
 ## Sensor data
 
-Every waste fraction found in the schedule creates a dedicated `date` sensor whose value is the date of the next collection. When there are no further dates in the schedule the sensor keeps showing the previous one. If a fraction exists but its schedule is empty, the sensor is still created but its state remains `unknown`.\
+Every waste fraction found in the schedule creates a dedicated `date` sensor whose value is the date of the next collection. When there are no further dates in the schedule, the sensor shows `unknown` state. If a fraction exists but its schedule is empty, the sensor is still created but its state remains `unknown`.
 
 Attributes:
 
@@ -110,7 +111,8 @@ Attributes:
 - `area` – collection zone defined by ProNatura.
 - `building_type` – building type (for example `MIESZKALNA`, `NIEMIESZKALNA`).
 - `address_name` – optional additional name for the property provided by ProNatura.
-- `days_until_collection` - number of days until next collection
+- `collection_status` - collection status: `scheduled` or `no_schedule`
+- `days_until_collection` - number of days until next collection (`null` when no date available)
 - `last_collection` - date of the last collection according to schedule
 
 Data from the API is refreshed once per day so the service is not overloaded.

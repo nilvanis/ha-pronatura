@@ -102,7 +102,7 @@ class TestProNaturaCollectionSensor:
             fraction="odpady zmieszane",
         )
 
-        assert sensor.native_value == date(2025, 1, 13)
+        assert sensor.native_value == date(2025, 6, 2)
 
     async def test_sensor_state_value_none(
         self, hass: HomeAssistant, mock_config_entry
@@ -186,8 +186,8 @@ class TestProNaturaCollectionSensor:
 
         import homeassistant.util.dt as dt_util
 
-        # Mock dt_util.now to return 2025-01-01
-        frozen_time = datetime(2025, 1, 1, 0, 0, 0, tzinfo=ZoneInfo("Europe/Warsaw"))
+        # Mock dt_util.now to return 2025-06-01
+        frozen_time = datetime(2025, 6, 1, 0, 0, 0, tzinfo=ZoneInfo("Europe/Warsaw"))
 
         with patch.object(dt_util, "now", return_value=frozen_time):
             sensor = ProNaturaCollectionSensor(
@@ -197,8 +197,8 @@ class TestProNaturaCollectionSensor:
             )
 
             attrs = sensor.extra_state_attributes
-            # Jan 13 - Jan 1 = 12 days
-            assert attrs["days_until_collection"] == 12
+            # Jun 2 - Jun 1 = 1 day
+            assert attrs["days_until_collection"] == 1
 
     async def test_days_until_calculation_zero(self, mock_coordinator):
         """Test days_until_collection calculation (0 days - today)."""
@@ -207,8 +207,8 @@ class TestProNaturaCollectionSensor:
 
         import homeassistant.util.dt as dt_util
 
-        # Mock dt_util.now to return 2025-01-13
-        frozen_time = datetime(2025, 1, 13, 0, 0, 0, tzinfo=ZoneInfo("Europe/Warsaw"))
+        # Mock dt_util.now to return 2025-06-02
+        frozen_time = datetime(2025, 6, 2, 0, 0, 0, tzinfo=ZoneInfo("Europe/Warsaw"))
 
         with patch.object(dt_util, "now", return_value=frozen_time):
             sensor = ProNaturaCollectionSensor(
@@ -228,8 +228,8 @@ class TestProNaturaCollectionSensor:
 
         import homeassistant.util.dt as dt_util
 
-        # Mock dt_util.now to return 2025-01-14
-        frozen_time = datetime(2025, 1, 14, 0, 0, 0, tzinfo=ZoneInfo("Europe/Warsaw"))
+        # Mock dt_util.now to return 2025-06-03
+        frozen_time = datetime(2025, 6, 3, 0, 0, 0, tzinfo=ZoneInfo("Europe/Warsaw"))
 
         with patch.object(dt_util, "now", return_value=frozen_time):
             sensor = ProNaturaCollectionSensor(
@@ -239,7 +239,7 @@ class TestProNaturaCollectionSensor:
             )
 
             attrs = sensor.extra_state_attributes
-            # Jan 13 - Jan 14 = -1 days (past)
+            # Jun 2 - Jun 3 = -1 day (past)
             assert attrs["days_until_collection"] == -1
 
     async def test_days_until_none_when_no_next_date(self, mock_coordinator):

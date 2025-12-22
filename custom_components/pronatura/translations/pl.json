@@ -55,6 +55,13 @@
                     "building_type": {
                         "name": "Typ nieruchomości"
                     },
+                    "collection_status": {
+                        "name": "Status",
+                        "state": {
+                            "scheduled": "Zaplanowany",
+                            "no_schedule": "Brak harmonogramu"
+                        }
+                    },
                     "days_until_collection": {
                         "name": "Dni do odbioru"
                     },

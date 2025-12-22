@@ -146,15 +146,15 @@ async def mock_coordinator(
         entry=mock_config_entry,
     )
 
-    # Pre-populate with sample data (as of 2025-01-01)
+    # Pre-populate with sample data (as of 2025-06-01)
     coordinator.data = ProNaturaCollectionData(
         next_dates={
-            "odpady zmieszane": date(2025, 1, 13),
-            "papier": date(2025, 1, 7),
+            "odpady zmieszane": date(2025, 6, 2),
+            "papier": date(2025, 6, 24),
         },
         previous_dates={
-            "odpady zmieszane": None,
-            "papier": None,
+            "odpady zmieszane": date(2025, 5, 19),
+            "papier": date(2025, 5, 27),
         },
         raw_schedule=load_fixture("trash_schedule.json"),
         details=ProNaturaAddressDetails(

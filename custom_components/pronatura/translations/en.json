@@ -55,6 +55,13 @@
                     "building_type": {
                         "name": "Building type"
                     },
+                    "collection_status": {
+                        "name": "Collection status",
+                        "state": {
+                            "scheduled": "Scheduled",
+                            "no_schedule": "No schedule"
+                        }
+                    },
                     "days_until_collection": {
                         "name": "Days until collection"
                     },
