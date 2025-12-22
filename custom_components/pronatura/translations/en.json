@@ -38,5 +38,34 @@
             "title": "Update your ProNatura address",
             "description": "Home Assistant can no longer find the configured address **{address}**.\n\n**Possible causes:**\n- The address was removed from the ProNatura database\n- The street name or building number changed\n- The ProNatura API is temporarily unavailable\n\n**To fix:** Click the button below to reconfigure the integration and select your address again from the current list."
         }
+    },
+    "entity": {
+        "sensor": {
+            "collection": {
+                "state_attributes": {
+                    "full_address": {
+                        "name": "Full address"
+                    },
+                    "fraction_name": {
+                        "name": "Waste fraction"
+                    },
+                    "area": {
+                        "name": "Collection area"
+                    },
+                    "building_type": {
+                        "name": "Building type"
+                    },
+                    "days_until_collection": {
+                        "name": "Days until collection"
+                    },
+                    "last_collection": {
+                        "name": "Last collection"
+                    },
+                    "address_name": {
+                        "name": "Address name"
+                    }
+                }
+            }
+        }
     }
 }

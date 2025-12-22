@@ -59,6 +59,7 @@ class ProNaturaCollectionSensor(ProNaturaEntity, SensorEntity):
     """Sensor exposing the next collection date for a fraction."""
 
     _attr_device_class = SensorDeviceClass.DATE
+    _attr_translation_key = "collection"
 
     def __init__(
         self,
