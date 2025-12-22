@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
+import contextlib
 import json
 from pathlib import Path
 from typing import Any
@@ -167,11 +168,37 @@ async def mock_coordinator(
         ),
     )
 
-    yield coordinator
+    return coordinator  # Cleanup handled by cleanup_all_coordinators autouse fixture
 
-    # Cleanup: cancel the midnight refresh timer to avoid "lingering timer" errors
-    if hasattr(coordinator, "_new_day_listener"):
-        coordinator._new_day_listener()
+
+@pytest.fixture(autouse=True)
+def cleanup_all_coordinators():
+    """Cleanup all coordinator timers after each test to prevent lingering timer errors.
+
+    This autouse fixture tracks all ProNaturaDataUpdateCoordinator instances created
+    during tests and automatically cancels their midnight refresh timers after each test completes.
+    """
+    # Track all coordinator instances created during the test
+    coordinators_to_cleanup = []
+    original_init = ProNaturaDataUpdateCoordinator.__init__
+
+    def tracked_init(self, *args, **kwargs):
+        original_init(self, *args, **kwargs)
+        coordinators_to_cleanup.append(self)
+
+    # Monkey-patch the coordinator __init__ to track instances
+    ProNaturaDataUpdateCoordinator.__init__ = tracked_init
+
+    yield
+
+    # Restore original __init__
+    ProNaturaDataUpdateCoordinator.__init__ = original_init
+
+    # Clean up all tracked coordinators
+    for coordinator in coordinators_to_cleanup:
+        if hasattr(coordinator, "_new_day_listener"):
+            with contextlib.suppress(Exception):
+                coordinator._new_day_listener()
 
 
 @pytest.fixture(autouse=True)
