@@ -44,16 +44,16 @@
             "collection": {
                 "state_attributes": {
                     "full_address": {
-                        "name": "Pełny adres"
+                        "name": "Adres"
                     },
                     "fraction_name": {
-                        "name": "Rodzaj odpadu"
+                        "name": "Frakcja"
                     },
                     "area": {
                         "name": "Strefa odbioru"
                     },
                     "building_type": {
-                        "name": "Typ budynku"
+                        "name": "Typ nieruchomości"
                     },
                     "days_until_collection": {
                         "name": "Dni do odbioru"
@@ -62,7 +62,7 @@
                         "name": "Ostatni odbiór"
                     },
                     "address_name": {
-                        "name": "Nazwa adresu"
+                        "name": "Nazwa nieruchomości"
                     }
                 }
             }
