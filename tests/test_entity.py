@@ -88,15 +88,17 @@ class TestProNaturaEntity:
         entity.hass = hass
 
         # Mock translation loading
-        translations = {ATTRIBUTION_TRANSLATION_KEY: "Dane dostarczone przez ProNatura"}
+        translations = {
+            ATTRIBUTION_TRANSLATION_KEY: "Dane udostępnione przez ProNatura"
+        }
 
         with patch(
-            "homeassistant.helpers.translation.async_get_cached_translations",
+            "homeassistant.helpers.translation.async_get_translations",
             return_value=translations,
         ):
             await entity.async_added_to_hass()
 
-        assert entity._attr_attribution == "Dane dostarczone przez ProNatura"
+        assert entity._attr_attribution == "Dane udostępnione przez ProNatura"
 
     async def test_async_added_to_hass_uses_default_when_missing(
         self,
@@ -115,7 +117,7 @@ class TestProNaturaEntity:
         translations = {}
 
         with patch(
-            "homeassistant.helpers.translation.async_get_cached_translations",
+            "homeassistant.helpers.translation.async_get_translations",
             return_value=translations,
         ):
             await entity.async_added_to_hass()
