@@ -58,8 +58,8 @@
                     "collection_status": {
                         "name": "Collection status",
                         "state": {
-                            "scheduled": "Scheduled",
-                            "no_schedule": "No schedule"
+                            "scheduled": "scheduled",
+                            "no_schedule": "no schedule"
                         }
                     },
                     "days_until_collection": {

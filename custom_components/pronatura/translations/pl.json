@@ -58,8 +58,8 @@
                     "collection_status": {
                         "name": "Status",
                         "state": {
-                            "scheduled": "Zaplanowany",
-                            "no_schedule": "Brak harmonogramu"
+                            "scheduled": "zaplanowany",
+                            "no_schedule": "brak harmonogramu"
                         }
                     },
                     "days_until_collection": {
