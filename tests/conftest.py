@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 import contextlib
+import inspect
 import json
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
+from aiohttp import ClientResponse
 from aioresponses import aioresponses
 import pytest
 
@@ -28,6 +30,25 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 pytest_plugins = "pytest_homeassistant_custom_component"
+
+
+@pytest.fixture(autouse=True)
+def aioresponses_stream_writer_compat(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Supply aiohttp's required stream writer only for aioresponses responses."""
+    stream_writer = inspect.signature(ClientResponse).parameters.get("stream_writer")
+    if stream_writer is None or stream_writer.default is not inspect.Parameter.empty:
+        return
+
+    # Work around https://github.com/pnuckowski/aioresponses/issues/289.
+    class CompatibleClientResponse(ClientResponse):
+        """Bridge aioresponses to the aiohttp 3.14 response constructor."""
+
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            """Provide the stream writer missing from the mock response factory."""
+            kwargs.setdefault("stream_writer", MagicMock(output_size=0))
+            super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr("aioresponses.core.ClientResponse", CompatibleClientResponse)
 
 
 def load_fixture(filename: str) -> Any:

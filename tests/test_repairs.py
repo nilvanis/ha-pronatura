@@ -59,9 +59,10 @@ async def repair_context(hass: HomeAssistant):
         translation_key="address_not_found",
         data={"entry_id": entry.entry_id},
     )
+    # Let HA discover the real platform without setting up the address entry.
+    hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "repairs", {})
-    # Register the real integration platform without requiring an entry setup.
-    hass.data["repairs"]["platforms"] = {DOMAIN: repairs}
+    await hass.async_block_till_done()
     manager = repairs_flow_manager(hass)
     assert manager is not None
     return entry, issue_id, manager
@@ -304,7 +305,7 @@ async def test_cancelling_repair_during_config_flow_initialization(
         confirm_task = asyncio.create_task(
             manager.async_configure(result["flow_id"], {})
         )
-        await api_started.wait()
+        await asyncio.wait_for(api_started.wait(), timeout=5)
         manager.async_abort(result["flow_id"])
         api_continue.set()
         result = await confirm_task
