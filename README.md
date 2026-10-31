@@ -63,6 +63,9 @@ Dane z API odświeżane są raz na dobę, aby niepotrzebnie nie obciążać serw
 Wyątek stanowi: restart Home Assistant, rekonfiguracja integracji oraz komunikat Napraw.
 
 W przypadku, gdy adres nie jest już dostępny w ProNatura API, wyświetlony zostaje komunikat Napraw proszący o wybranie nowego adresu.
+Jeśli API zwraca niepustą listę ulic, ale brakuje skonfigurowanej ulicy, komunikat pojawi się dopiero przy ponownym
+potwierdzeniu jej braku po co najmniej 48 godzinach. Czas oczekiwania jest zachowywany po restarcie HA,
+a poprawne pobranie harmonogramu zeruje licznik.
 
 ## English version
 
@@ -119,3 +122,6 @@ Data from the API is refreshed once per day so the service is not overloaded.
 Exceptions: Home Assistant restart, integration reconfiguration, and Repairs notifications.
 
 If a previously configured address disappears from ProNatura, Home Assistant shows a Repair notification that lets you reopen the ProNatura config flow and pick the address again.
+If the API returns a nonempty street list that omits the configured street, the notification is deferred until
+another lookup confirms the street is still missing at least 48 hours later. This waiting period survives HA restarts;
+a successful schedule fetch resets it.

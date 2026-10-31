@@ -11,6 +11,7 @@ from typing import Any
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -28,6 +29,9 @@ from .const import (
     CONF_STREET_NAME,
     DOMAIN,
     MONTH_NAME_TO_NUMBER,
+    STREET_REPAIR_DELAY,
+    STREET_REPAIR_STORAGE_KEY,
+    STREET_REPAIR_STORAGE_VERSION,
     UPDATE_INTERVAL,
 )
 from .models import ProNaturaConfigEntry
@@ -96,6 +100,13 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
             entry.data.get(CONF_BUILDING_NUMBER),
             entry.data.get(CONF_ADDRESS_NAME),
         )
+        self._street_missing_since: datetime | None = None
+        self._street_missing_loaded = False
+        self._street_missing_store = Store[dict[str, str]](
+            hass,
+            STREET_REPAIR_STORAGE_VERSION,
+            STREET_REPAIR_STORAGE_KEY.format(entry_id=entry.entry_id),
+        )
         self._issue_active = False
         self._issue_id = f"{entry.entry_id}_address_not_found"
         self._schedule_cache: ProNaturaTrashScheduleResponse | None = None
@@ -111,10 +122,28 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
 
     async def _async_update_data(self) -> ProNaturaCollectionData:
         """Fetch the latest schedule and compute next collection dates."""
+        await self._async_restore_street_missing_since()
         now = dt_util.utcnow()
         try:
             schedule = await self._async_get_or_fetch_schedule(now)
-        except (ProNaturaAddressNotFoundError, ProNaturaStreetNotFoundError) as err:
+        except ProNaturaStreetNotFoundError as err:
+            now = dt_util.utcnow()
+            if self._street_missing_since is None:
+                await self._street_missing_store.async_save(
+                    {"street": self._street_name, "first_missing": now.isoformat()}
+                )
+                self._street_missing_since = now
+            if now - self._street_missing_since >= STREET_REPAIR_DELAY:
+                self._report_address_issue(err)
+            else:
+                _LOGGER.debug(
+                    "Street %s missing from ProNatura; deferring repair until %s",
+                    self._street_name,
+                    self._street_missing_since + STREET_REPAIR_DELAY,
+                )
+            raise UpdateFailed(err) from err
+        except ProNaturaAddressNotFoundError as err:
+            await self._async_clear_street_missing_since()
             self._report_address_issue(err)
             raise UpdateFailed(err) from err
         except ProNaturaApiError as err:
@@ -124,6 +153,7 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
             schedule, self._timezone
         )
         details = _build_address_details(schedule, self._entry.data)
+        await self._async_clear_street_missing_since()
         self._clear_address_issue()
         return ProNaturaCollectionData(
             next_dates=next_dates,
@@ -131,6 +161,26 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
             raw_schedule=schedule,
             details=details,
         )
+
+    async def _async_restore_street_missing_since(self) -> None:
+        """Restore the grace period across setup retries, reloads and restarts."""
+        if self._street_missing_loaded:
+            return
+        saved = await self._street_missing_store.async_load()
+        if saved:
+            if saved.get("street") == self._street_name:
+                since = dt_util.parse_datetime(saved.get("first_missing", ""))
+                if since is not None and since.tzinfo is not None:
+                    self._street_missing_since = dt_util.as_utc(since)
+            if self._street_missing_since is None:
+                await self._street_missing_store.async_remove()
+        self._street_missing_loaded = True
+
+    async def _async_clear_street_missing_since(self) -> None:
+        """Reset the grace period when the street is available again."""
+        if self._street_missing_since is not None:
+            await self._street_missing_store.async_remove()
+            self._street_missing_since = None
 
     def _report_address_issue(self, error: Exception) -> None:
         """Log the failure details and create a repair issue for missing addresses."""

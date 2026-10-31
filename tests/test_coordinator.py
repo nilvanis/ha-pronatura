@@ -394,10 +394,10 @@ class TestProNaturaDataUpdateCoordinator:
 
         await session.close()
 
-    async def test_street_not_found_issue(
+    async def test_street_not_found_defers_issue(
         self, hass: HomeAssistant, mock_config_entry: ProNaturaConfigEntry
     ):
-        """Test issue creation on street not found."""
+        """Defer repairs when a street first disappears from the list."""
         from aiohttp import ClientSession
 
         session = ClientSession()
@@ -420,7 +420,7 @@ class TestProNaturaDataUpdateCoordinator:
             with pytest.raises(ConfigEntryNotReady):
                 await coordinator.async_config_entry_first_refresh()
 
-            assert mock_create.called
+            mock_create.assert_not_called()
 
         await session.close()
 
