@@ -1,0 +1,19 @@
+-r requirements_test.txt
+
+# Runtime imports used by HA's frontend, service descriptions and onboarding.
+# Versions are constrained by Home Assistant in requirements_test.txt.
+av
+gazetteer-matcher
+gTTS==2.5.4
+ha-ffmpeg
+hassil
+home-assistant-frontend
+home-assistant-intents
+isal
+mutagen
+pymicro-vad
+pyspeex-noise
+PyTurboJPEG
+
+debugpy>=1.8,<2
+ruff==0.14.10

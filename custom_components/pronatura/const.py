@@ -28,6 +28,9 @@ API_TIMEOUT: Final = 10
 API_MAX_RETRIES: Final = 3
 API_RETRY_DELAY: Final = 1  # Initial delay in seconds
 UPDATE_INTERVAL = timedelta(days=1)
+STREET_REPAIR_DELAY = timedelta(hours=48)
+STREET_REPAIR_STORAGE_VERSION = 1
+STREET_REPAIR_STORAGE_KEY = f"{DOMAIN}.{{entry_id}}.street_missing"
 
 DEFAULT_ATTRIBUTION: Final = "Data provided by ProNatura"
 ATTRIBUTION_TRANSLATION_KEY: Final = f"component.{DOMAIN}.common.attribution"

@@ -332,13 +332,13 @@ class TestDiagnostics:
         mock_config_entry: ProNaturaConfigEntry,
         mock_coordinator,
     ):
-        """Test integration version matches manifest (1.0.4)."""
+        """Test integration version matches manifest (1.0.5)."""
         mock_config_entry.runtime_data = MagicMock()
         mock_config_entry.runtime_data.coordinator = mock_coordinator
 
         diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
-        assert diagnostics["system_info"]["integration_version"] == "1.0.4"
+        assert diagnostics["system_info"]["integration_version"] == "1.0.5"
 
     async def test_no_sensitive_data_leaks(
         self,

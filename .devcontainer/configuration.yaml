@@ -1,0 +1,20 @@
+# Minimal, separate Home Assistant instance for developing ProNatura.
+homeassistant:
+  name: ProNatura Development
+  latitude: 53.1235
+  longitude: 18.0084
+  elevation: 60
+  country: PL
+  time_zone: Europe/Warsaw
+  unit_system: metric
+
+config:
+frontend:
+http:
+history:
+recorder:
+
+logger:
+  default: warning
+  logs:
+    custom_components.pronatura: debug

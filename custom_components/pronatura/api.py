@@ -108,6 +108,7 @@ class ProNaturaApiClient:
         response: list[ProNaturaStreet] = await self._request(
             "streets", context="streets list"
         )
+        _validate_lookup_response(response, required_fields=("id", "street"))
         _LOGGER.debug("Received %d ProNatura streets", len(response))
         return response
 
@@ -125,6 +126,12 @@ class ProNaturaApiClient:
             f"address-points/{street_id}",
             context=f"address points for {target}",
         )
+        _validate_lookup_response(response, required_fields=("id", "buildingNumber"))
+        if any(
+            address.get("name") is not None and not isinstance(address["name"], str)
+            for address in response
+        ):
+            raise ProNaturaApiError("Invalid address points received from ProNatura")
         _LOGGER.debug(
             "Received %d ProNatura address points for street %s (id: %s)",
             len(response),
@@ -145,6 +152,10 @@ class ProNaturaApiClient:
             f"trash-schedule/{address_id}",
             context=f"trash schedule for {target}",
         )
+        if not isinstance(response, dict) or not isinstance(
+            response.get("trashSchedule"), list
+        ):
+            raise ProNaturaApiError("Invalid trash schedule received from ProNatura")
         _LOGGER.debug(
             "Received ProNatura trash schedule for %s (id: %s )", target, address_id
         )
@@ -226,6 +237,10 @@ class ProNaturaApiClient:
         addresses = await self.async_get_address_points(
             street_id, street_name=street_name
         )
+        if not addresses:
+            raise ProNaturaApiError(
+                "No address points available from ProNatura API - service may be unavailable"
+            )
         normalized_number = _normalize_building_number(building_number)
         normalized_name = _normalize_text(address_name)
 
@@ -344,6 +359,21 @@ class ProNaturaApiClient:
         raise ProNaturaApiError(
             f"Failed after {API_MAX_RETRIES} attempts: {last_exception}"
         ) from last_exception
+
+
+def _validate_lookup_response(
+    response: Any, *, required_fields: tuple[str, ...]
+) -> None:
+    """Reject service messages and incomplete lists before resolving an address."""
+    if not isinstance(response, list) or any(
+        not isinstance(item, dict)
+        or any(
+            not isinstance(item.get(field), str) or not item[field].strip()
+            for field in required_fields
+        )
+        for item in response
+    ):
+        raise ProNaturaApiError("Invalid lookup response received from ProNatura")
 
 
 async def _raise_for_status(

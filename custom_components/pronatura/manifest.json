@@ -1,6 +1,7 @@
 {
   "domain": "pronatura",
   "name": "ProNatura",
+  "categories": ["local_services"],
   "codeowners": ["@nilvanis"],
   "config_flow": true,
   "documentation": "https://github.com/nilvanis/ha-pronatura",
@@ -10,5 +11,5 @@
   "quality_scale": "silver",
   "requirements": [],
   "single_config_entry": false,
-  "version": "1.0.4"
+  "version": "1.0.5"
 }

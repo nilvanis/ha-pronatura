@@ -5,9 +5,15 @@ from __future__ import annotations
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation as translation_helper
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import Store
 
 from .api import ProNaturaApiClient
-from .const import DOMAIN, PLATFORMS
+from .const import (
+    DOMAIN,
+    PLATFORMS,
+    STREET_REPAIR_STORAGE_KEY,
+    STREET_REPAIR_STORAGE_VERSION,
+)
 from .coordinator import ProNaturaDataUpdateCoordinator
 from .models import ProNaturaConfigEntry, ProNaturaRuntimeData
 
@@ -43,3 +49,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntryType) -> boo
     if unload_ok:
         entry.runtime_data = None  # type: ignore[assignment]
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntryType) -> None:
+    """Remove persisted repair timing when the integration entry is deleted."""
+    await Store[dict[str, str]](
+        hass,
+        STREET_REPAIR_STORAGE_VERSION,
+        STREET_REPAIR_STORAGE_KEY.format(entry_id=entry.entry_id),
+    ).async_remove()
