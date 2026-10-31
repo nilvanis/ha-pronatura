@@ -352,6 +352,9 @@ class TestReconfigureFlow:
                 "custom_components.pronatura.config_flow.ProNaturaApiClient.async_get_address_points",
                 return_value=load_fixture("address_points.json"),
             ),
+            patch.object(
+                hass.config_entries, "async_reload", return_value=True
+            ) as mock_reload,
         ):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -371,34 +374,11 @@ class TestReconfigureFlow:
             assert result["type"] == FlowResultType.ABORT
             assert result["reason"] == "reconfigure_successful"
 
-            # Verify force refresh was called
-            assert runtime_data.coordinator.async_force_schedule_refresh.called
-
-    async def test_reconfigure_force_refresh_timing(self, hass: HomeAssistant):
-        """Test reconfigure force refreshes only on successful completion."""
-        entry = MagicMock()
-        entry.entry_id = "test_entry_id"
-        entry.unique_id = "252658c2-d9fd-4935-84bb-2fe1f742a340"
-
-        runtime_data = MagicMock()
-        runtime_data.coordinator.async_force_schedule_refresh = AsyncMock()
-        entry.runtime_data = runtime_data
-
-        with (
-            patch.object(hass.config_entries, "async_get_entry", return_value=entry),
-            patch(
-                "custom_components.pronatura.config_flow.ProNaturaApiClient.async_get_streets",
-                return_value=load_fixture("streets.json"),
-            ),
-        ):
-            # Start reconfigure
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_RECONFIGURE, "entry_id": "test_entry_id"},
-            )
-
-            # Force refresh should NOT be called at start
-            assert not runtime_data.coordinator.async_force_schedule_refresh.called
+            await hass.async_block_till_done()
+            assert entry.data[CONF_ADDRESS_ID] == "970e7a2b-b4ae-488b-a8ec-cf316bf907f1"
+            assert entry.data[CONF_BUILDING_NUMBER] == "14"
+            mock_reload.assert_awaited_once_with(entry.entry_id)
+            runtime_data.coordinator.async_force_schedule_refresh.assert_not_awaited()
 
     async def test_reconfigure_unique_id_conflict(self, hass: HomeAssistant):
         """Test reconfigure unique ID conflict handling."""
@@ -460,29 +440,6 @@ class TestReconfigureFlow:
 
             assert result["type"] == FlowResultType.ABORT
             assert result["reason"] == "already_configured"
-
-    async def test_force_entry_refresh_with_none_entry(self, hass: HomeAssistant):
-        """Test _async_force_entry_refresh with None entry."""
-        from custom_components.pronatura.config_flow import ProNaturaConfigFlow
-
-        flow = ProNaturaConfigFlow()
-        flow.hass = hass
-
-        # Should not crash with None entry
-        await flow._async_force_entry_refresh(None)
-
-    async def test_force_entry_refresh_with_no_runtime_data(self, hass: HomeAssistant):
-        """Test _async_force_entry_refresh with no runtime_data."""
-        from custom_components.pronatura.config_flow import ProNaturaConfigFlow
-
-        flow = ProNaturaConfigFlow()
-        flow.hass = hass
-
-        entry = MagicMock()
-        entry.runtime_data = None
-
-        # Should not crash with no runtime_data
-        await flow._async_force_entry_refresh(entry)
 
     async def test_config_flow_version(self):
         """Test config flow VERSION and MINOR_VERSION."""

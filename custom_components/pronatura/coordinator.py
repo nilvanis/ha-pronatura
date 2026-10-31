@@ -160,11 +160,12 @@ class ProNaturaDataUpdateCoordinator(DataUpdateCoordinator[ProNaturaCollectionDa
 
     def _clear_address_issue(self) -> None:
         """Log recovery and remove the repair issue once the schedule resolves again."""
-        if not self._issue_active:
-            return
-        _LOGGER.info(
-            "Address %s is available again; clearing repair issue", self._address_label
-        )
+        if self._issue_active:
+            _LOGGER.info(
+                "Address %s is available again; clearing repair issue",
+                self._address_label,
+            )
+        # Issues can outlive this coordinator after a reload or restart.
         ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
         self._issue_active = False
 

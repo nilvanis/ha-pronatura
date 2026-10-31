@@ -11,8 +11,10 @@ import pytest
 from custom_components.pronatura.api import (
     ProNaturaAddressNotFoundError,
     ProNaturaApiClient,
+    ProNaturaApiError,
     ProNaturaStreetNotFoundError,
 )
+from custom_components.pronatura.const import DOMAIN
 from custom_components.pronatura.coordinator import (
     ProNaturaDataUpdateCoordinator,
     _build_address_details,
@@ -20,6 +22,7 @@ from custom_components.pronatura.coordinator import (
 )
 from custom_components.pronatura.models import ProNaturaConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from .conftest import load_fixture
@@ -276,6 +279,93 @@ class TestProNaturaDataUpdateCoordinator:
             assert mock_delete.called
 
         await session.close()
+
+    @pytest.mark.parametrize("api_available", [True, False])
+    async def test_address_issue_from_previous_coordinator(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: ProNaturaConfigEntry,
+        mock_pronatura_api: ProNaturaApiClient,
+        api_available: bool,
+    ):
+        """Clear issues from a failed setup or reload only after a successful fetch."""
+        issue_id = f"{mock_config_entry.entry_id}_address_not_found"
+        other_issue_id = "other_entry_address_not_found"
+        for restored_issue_id in (issue_id, other_issue_id):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                restored_issue_id,
+                is_fixable=True,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="address_not_found",
+            )
+        registry = ir.async_get(hass)
+        assert registry.async_get_issue(DOMAIN, issue_id) is not None
+
+        if not api_available:
+            mock_pronatura_api.async_get_trash_schedule_for_address.side_effect = (
+                ProNaturaApiError("Service unavailable")
+            )
+        coordinator = ProNaturaDataUpdateCoordinator(
+            hass,
+            client=mock_pronatura_api,
+            entry=mock_config_entry,
+        )
+
+        await coordinator.async_refresh()
+
+        assert coordinator.last_update_success is api_available
+        if api_available:
+            assert registry.async_get_issue(DOMAIN, issue_id) is None
+        else:
+            assert registry.async_get_issue(DOMAIN, issue_id) is not None
+        assert registry.async_get_issue(DOMAIN, other_issue_id) is not None
+
+    @pytest.mark.parametrize("maintenance_payload", [[], {"message": "Maintenance"}])
+    async def test_api_maintenance_recovers_without_address_repair(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: ProNaturaConfigEntry,
+        maintenance_payload,
+    ):
+        """Treat unusable address responses as outages and recover on the next fetch."""
+        from aiohttp import ClientSession
+        from aioresponses import aioresponses
+
+        from custom_components.pronatura.const import BASE_API_URL
+
+        issue_id = f"{mock_config_entry.entry_id}_address_not_found"
+        with aioresponses() as responses:
+            responses.get(
+                f"{BASE_API_URL}/streets",
+                payload=load_fixture("streets.json"),
+                repeat=True,
+            )
+            address_url = (
+                f"{BASE_API_URL}/address-points/b4301bec-ca92-4b07-93f2-8d20a4d6eed0"
+            )
+            responses.get(address_url, payload=maintenance_payload)
+            responses.get(address_url, payload=load_fixture("address_points.json"))
+            responses.get(
+                f"{BASE_API_URL}/trash-schedule/252658c2-d9fd-4935-84bb-2fe1f742a340",
+                payload=load_fixture("trash_schedule.json"),
+            )
+            async with ClientSession() as session:
+                coordinator = ProNaturaDataUpdateCoordinator(
+                    hass,
+                    client=ProNaturaApiClient(session),
+                    entry=mock_config_entry,
+                )
+                await coordinator.async_refresh()
+                assert not coordinator.last_update_success
+                assert coordinator.data is None
+                assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+
+                await coordinator.async_refresh()
+                assert coordinator.last_update_success
+                assert coordinator.data is not None
+                assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
 
     async def test_schedule_cache_timestamp_property(
         self, hass: HomeAssistant, mock_config_entry: ProNaturaConfigEntry

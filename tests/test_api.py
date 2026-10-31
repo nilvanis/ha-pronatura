@@ -97,6 +97,49 @@ class TestProNaturaApiClient:
                 assert addresses[0]["buildingNumber"] == "14"
                 assert addresses[2]["name"] == "BYDGOSKA SPÓŁDZIELNIA MIESZKANIOWA"
 
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            None,
+            {"message": "Maintenance"},
+            "Maintenance",
+            ["Maintenance"],
+            [{"id": "1"}],
+            [{"id": "1", "street": None}],
+            [{"id": "", "street": "TEST"}],
+        ],
+    )
+    async def test_get_streets_invalid_payload(self, payload):
+        """Reject invalid lookup data as an API failure, not a missing street."""
+        with aioresponses() as mock:
+            mock.get(f"{BASE_API_URL}/streets", payload=payload)
+            async with ClientSession() as session:
+                client = ProNaturaApiClient(session)
+                with pytest.raises(ProNaturaApiError, match="Invalid lookup response"):
+                    await client.async_get_streets()
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            None,
+            {"message": "Maintenance"},
+            "Maintenance",
+            ["Maintenance"],
+            [{"id": "1"}],
+            [{"id": "1", "buildingNumber": None}],
+            [{"id": "1", "buildingNumber": " "}],
+            [{"id": "1", "buildingNumber": "16", "name": 42}],
+        ],
+    )
+    async def test_get_address_points_invalid_payload(self, payload):
+        """Reject incomplete address data before looking for a configured address."""
+        with aioresponses() as mock:
+            mock.get(f"{BASE_API_URL}/address-points/street-id", payload=payload)
+            async with ClientSession() as session:
+                client = ProNaturaApiClient(session)
+                with pytest.raises(ProNaturaApiError, match="Invalid"):
+                    await client.async_get_address_points("street-id")
+
     async def test_get_address_points_404(self):
         """Test 404 error handling for address points."""
         with aioresponses() as mock:
@@ -147,6 +190,28 @@ class TestProNaturaApiClient:
                     await client.async_get_trash_schedule(
                         "252658c2-d9fd-4935-84bb-2fe1f742a340"
                     )
+
+    @pytest.mark.parametrize(
+        "payload",
+        [None, [], {"message": "Maintenance"}, {"trashSchedule": None}],
+    )
+    async def test_get_trash_schedule_invalid_payload(self, payload):
+        """A JSON service message must not count as a recovered schedule."""
+        with aioresponses() as mock:
+            mock.get(f"{BASE_API_URL}/trash-schedule/address-id", payload=payload)
+            async with ClientSession() as session:
+                client = ProNaturaApiClient(session)
+                with pytest.raises(ProNaturaApiError, match="Invalid trash schedule"):
+                    await client.async_get_trash_schedule("address-id")
+
+    async def test_get_trash_schedule_empty(self):
+        """An explicitly empty schedule remains a valid response."""
+        schedule = load_fixture("trash_schedule_empty.json")
+        with aioresponses() as mock:
+            mock.get(f"{BASE_API_URL}/trash-schedule/address-id", payload=schedule)
+            async with ClientSession() as session:
+                client = ProNaturaApiClient(session)
+                assert await client.async_get_trash_schedule("address-id") == schedule
 
     async def test_get_trash_schedule_for_address_full_flow(self):
         """Test full address resolution flow."""
@@ -465,6 +530,28 @@ class TestProNaturaApiClient:
                         street_name="11 DYWIZJONU ARTYLERII KONNEJ",
                         building_number="16",
                     )
+
+    async def test_no_address_points_returned(self):
+        """An empty address list indicates an unavailable service, not a moved address."""
+        with aioresponses() as mock:
+            mock.get(
+                f"{BASE_API_URL}/streets",
+                payload=load_fixture("streets.json"),
+            )
+            mock.get(
+                f"{BASE_API_URL}/address-points/b4301bec-ca92-4b07-93f2-8d20a4d6eed0",
+                payload=[],
+            )
+            async with ClientSession() as session:
+                client = ProNaturaApiClient(session)
+                with pytest.raises(
+                    ProNaturaApiError, match="No address points available"
+                ) as error:
+                    await client.async_get_trash_schedule_for_address(
+                        street_name="11 DYWIZJONU ARTYLERII KONNEJ",
+                        building_number="16",
+                    )
+                assert type(error.value) is ProNaturaApiError
 
     async def test_http_500_error(self):
         """Test handling of HTTP 500 errors."""

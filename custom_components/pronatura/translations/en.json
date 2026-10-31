@@ -6,7 +6,7 @@
         "abort": {
             "already_configured": "This address is already configured.",
             "street_not_found": "The selected street can no longer be configured.",
-            "reconfigure_initiated": "Reconfiguration started. The issue will be automatically resolved if reconfiguration succeeds."
+            "reconfigure_successful": "Address saved. This issue will disappear after the schedule is fetched successfully."
         },
         "error": {
             "address_not_found": "The selected address is no longer available. Please choose again.",
@@ -36,7 +36,44 @@
     "issues": {
         "address_not_found": {
             "title": "Update your ProNatura address",
-            "description": "Home Assistant can no longer find the configured address **{address}**.\n\n**Possible causes:**\n- The address was removed from the ProNatura database\n- The street name or building number changed\n- The ProNatura API is temporarily unavailable\n\n**To fix:** Click the button below to reconfigure the integration and select your address again from the current list."
+            "description": "Home Assistant can no longer find the configured address **{address}**.\n\n**Possible causes:**\n- The address was removed from the ProNatura database\n- The street name or building number changed\n- The ProNatura API is temporarily unavailable\n\n**To fix:** Click the button below to reconfigure the integration and select your address again from the current list.",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Update your ProNatura address",
+                        "description": "Select the street and address again for **{title}**. This issue will disappear after the schedule is fetched successfully."
+                    },
+                    "address": {
+                        "data": {
+                            "address_id": "Building number"
+                        },
+                        "description": "Pick the building number for {street}.",
+                        "title": "Select your address"
+                    },
+                    "user": {
+                        "data": {
+                            "street_id": "Street"
+                        },
+                        "description": "Choose the street for which you want to monitor the trash pickup schedule.",
+                        "title": "Select your street"
+                    }
+                },
+                "error": {
+                    "address_not_found": "The selected address is no longer available. Please choose again.",
+                    "cannot_connect": "Could not connect to the ProNatura service.",
+                    "no_addresses": "No address points are available for this street.",
+                    "no_streets": "No streets are available right now.",
+                    "street_not_found": "The selected street is no longer available. Please choose again."
+                },
+                "abort": {
+                    "already_configured": "This address is already configured.",
+                    "street_not_found": "The selected street can no longer be configured.",
+                    "reconfigure_successful": "Address saved. This issue will disappear after the schedule is fetched successfully.",
+                    "entry_not_found": "The integration entry has been removed.",
+                    "reconfigure_cancelled": "Reconfiguration was cancelled. Open the repair again.",
+                    "already_in_progress": "Reconfiguration is already in progress. Complete it in the integration settings."
+                }
+            }
         }
     },
     "entity": {

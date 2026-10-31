@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -31,7 +31,6 @@ from .const import (
     CONF_STREET_NAME,
     DOMAIN,
 )
-from .models import ProNaturaRuntimeData
 from .util import format_address_label
 
 LOGGER = logging.getLogger(__name__)
@@ -159,8 +158,6 @@ class ProNaturaConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 title = format_address_label(street_name, building_number, address_name)
                 if self.source == SOURCE_RECONFIGURE and reconfigure_entry is not None:
-                    # Force refresh before updating to ensure we have latest data
-                    await self._async_force_entry_refresh(reconfigure_entry)
                     return self.async_update_reload_and_abort(
                         reconfigure_entry,
                         unique_id=address_id,
@@ -217,12 +214,3 @@ class ProNaturaConfigFlow(ConfigFlow, domain=DOMAIN):
                 "street": self._street["street"].title(),
             },
         )
-
-    async def _async_force_entry_refresh(self, entry: ConfigEntry | None) -> None:
-        """Force the coordinator to refresh when reconfiguring."""
-        if entry is None:
-            return
-        runtime_data = cast(ProNaturaRuntimeData | None, entry.runtime_data)
-        if runtime_data is None:
-            return
-        await runtime_data.coordinator.async_force_schedule_refresh()
