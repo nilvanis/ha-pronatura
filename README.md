@@ -64,6 +64,12 @@ Wyątek stanowi: restart Home Assistant, rekonfiguracja integracji oraz komunika
 
 W przypadku, gdy adres nie jest już dostępny w ProNatura API, wyświetlony zostaje komunikat Napraw proszący o wybranie nowego adresu.
 
+## Rozwój i testowanie w Home Assistant
+
+W VS Code wybierz **Dev Containers: Reopen in Container**, a następnie uruchom
+**Home Assistant: ProNatura** przez **F5** i otwórz <http://localhost:8123>.
+[Instrukcja developmentu](.devcontainer/README.md) opisuje setup, debugowanie i testy.
+
 ## English version
 
 Home Assistant integration that downloads the garbage collection schedule for a selected address serviced by ProNatura (Bydgoszcz).\
@@ -119,3 +125,9 @@ Data from the API is refreshed once per day so the service is not overloaded.
 Exceptions: Home Assistant restart, integration reconfiguration, and Repairs notifications.
 
 If a previously configured address disappears from ProNatura, Home Assistant shows a Repair notification that lets you reopen the ProNatura config flow and pick the address again.
+
+## Development and testing in Home Assistant
+
+In VS Code, run **Dev Containers: Reopen in Container**, select **Home Assistant:
+ProNatura**, press **F5**, and open <http://localhost:8123>. See the
+[development guide](.devcontainer/README.md) (Polish) for setup, debugging, and tests.

@@ -45,6 +45,7 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage.json
 *.cover
 *.py.cover
 .hypothesis/
@@ -138,6 +139,8 @@ celerybeat.pid
 .env
 .envrc
 .venv
+# Local Home Assistant development instance (accounts, tokens, database, logs)
+/config/
 env/
 venv/
 ENV/
